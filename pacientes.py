@@ -1,4 +1,4 @@
-# Branch: gestion_pacientes
+
 
 dnis = []
 nombres = []
@@ -14,7 +14,7 @@ def contar_lista(lista):
     return contador
 
 
-# Búsqueda secuencial devuelve el índice si encuentra el DNI, si no devuelve -1
+# Busqueda secuencial devuelve el indice si encuentra el DNI, si no devuelve -1
 def buscar_paciente(dni_buscado):
     i = 0
     while i < len(dnis) and dnis[i] != dni_buscado:
