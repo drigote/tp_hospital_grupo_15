@@ -1,0 +1,106 @@
+def mostrar_turnos():
+    print("--- ESTADO DE LOS TURNOS ---")
+    for i in range(len(horarios)):
+        print(horarios[i], "->", turnos[i])
+
+def asignar_turnos():
+    hora = input("Ingrese la hora del turno: ")
+    nombre = input("Ingrese el nombre del paciente: ")
+
+    for i in range(len(horarios)):
+        if horarios[i] == hora:
+            if turnos[i] == "Libre":
+                turnos[i] = nombre
+                print("Turno asignado")
+            else:
+                print("Turno Ocupado")
+            return
+    print("Horario inexistente")
+
+def cancelar_turno():
+    hora = input("Ingrese la hora del turno a cancelar: ")
+
+    for i in range(len(horarios)):
+        if horarios[i] == hora:
+            if turnos[i] != "Libre":
+                turnos[i] = "Libre"
+                print("Turno cancelado")
+            else:
+                print("El turno ya está libre")
+            return
+    print("Horario inexistente")
+
+# ------------------ TURNOS ------------------
+
+turnos = ["Libre", "Libre", "Libre", "Libre", "Libre"]
+horarios = ["08:00", "09:00", "10:00", "11:00", "12:00"]
+
+# ------------------ MENU PRINCIPAL ----------
+opcion = -1
+
+while opcion != 0:
+    print("\n--- MENU PRINCIPAL ---")
+    print("[1] Ver turnos disponibles")
+    print("[2] Reserva de turnos")
+    print("[3] Cancelación de turnos")
+    print("[4] Gestion de pacientes")
+    print("[5] Gestion de camas")
+    print("[6] Registro Clinico")
+    print("[0] Salir")
+
+    op = int(input("Opcion: "))
+
+    if op == 1:
+        print("\n--- TURNOS DISPONIBLES ---")
+        mostrar_turnos()
+
+    elif op == 2:
+        asignar_turnos()
+
+    elif op == 3:
+        cancelar_turno()
+
+    elif op == 4:
+        turno_actual = input("Ingrese el turno a modificar: ")
+
+        if turno_actual in turnos:
+            nuevo_turno = input("Ingrese el nuevo turno: ")
+
+            if nuevo_turno in turnos and nuevo_turno not in turnos:
+                i = 0
+                while i < len(turnos):
+                    if turnos[i] == turno_actual:
+                        turnos[i] = nuevo_turno
+                    i = i + 1
+
+                print(f"Turno '{turno_actual}' modificado a '{nuevo_turno}'.")
+            else:
+                print("El nuevo turno no es válido o ya está ocupado.")
+        else:
+            print("El turno no existe.")
+            
+    elif op == 5:
+        turno_a_eliminar = input("Ingrese el turno a eliminar: ")
+
+        if turno_a_eliminar in turnos:
+            i = 0
+            while i < len(turnos):
+                if turnos[i] == turno_a_eliminar:
+                    turnos.pop(i)
+                    break
+                i = i + 1
+
+            print(f"Turno '{turno_a_eliminar}' eliminado exitosamente.")
+        else:
+            print("El turno no existe.")
+
+    elif op == 6:
+            
+        if len(turnos) > 0:
+            print("\n--- TURNOS AGENDADOS ---")
+            i = 0
+            while i < len(turnos):
+                print("[", i + 1, "]", turnos[i])
+                i = i + 1
+        else:
+            print("No hay turnos agendados.")
