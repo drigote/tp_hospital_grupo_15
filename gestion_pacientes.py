@@ -1,4 +1,3 @@
-
 normalizar_nombre = lambda texto: texto.strip().title()
 normalizar_texto = lambda texto: texto.strip()
 
@@ -13,6 +12,8 @@ def contar_lista(lista):
 
 def buscar_paciente(dnis, dni_buscado):
     #Busca un paciente por DNI y devuelve su indice o -1 si no existe
+    dni_buscado = dni_buscado.strip()
+
     i = 0
     while i < len(dnis) and dnis[i] != dni_buscado:
         i = i + 1
@@ -25,7 +26,7 @@ def buscar_paciente(dnis, dni_buscado):
 
 def registrar_paciente(dnis, nombres, edades, diagnosticos, estados,
                        dni, nombre, edad, diagnostico, estado_inicial="Ambulatorio"):
-    
+
     #Registra un paciente nuevo si el DNI no existe. Devuelve True si se registro y False si ya existia
     if buscar_paciente(dnis, dni) != -1:
         return False
@@ -44,21 +45,20 @@ def mostrar_paciente(dnis, nombres, edades, diagnosticos, estados, dni_buscado):
     indice = buscar_paciente(dnis, dni_buscado)
 
     if indice == -1:
-        print("No se encontró ningún paciente con ese DNI.")
+        print("No se encontro ningun paciente con ese DNI.")
     else:
         print("----- DATOS DEL PACIENTE -----")
         print("DNI:", dnis[indice])
         print("Nombre:", nombres[indice])
         print("Edad:", edades[indice])
-        print("Diagnóstico:", diagnosticos[indice])
+        print("Diagnostico:", diagnosticos[indice])
         print("Estado:", estados[indice])
         print("------------------------------")
 
 
 def obtener_resumenes_pacientes(dnis, nombres, estados):
     #Se usa para mostrar todos los pacientes de una forma mas ordenada
-    return list(map(lambda i: f"DNI: {dnis[i]} - Nombre: {nombres[i]} - Estado: {estados[i]}", range(len(dnis)))
-    )
+    return list(map(lambda i: f"DNI: {dnis[i]} - Nombre: {nombres[i]} - Estado: {estados[i]}", range(len(dnis))))
 
 
 def mostrar_todos_los_pacientes(dnis, nombres, estados):
@@ -77,7 +77,6 @@ def mostrar_todos_los_pacientes(dnis, nombres, estados):
 
 def actualizar_diagnostico(dnis, diagnosticos, dni_buscado, nuevo_diagnostico):
     #Actualiza el diagnostico de un paciente
-
     indice = buscar_paciente(dnis, dni_buscado)
 
     if indice == -1:
@@ -118,10 +117,10 @@ def dar_alta(dnis, estados, dni_buscado):
     if indice == -1:
         return -1
     else:
-        if estados[indice] == "Alta médica":
+        if estados[indice] == "Alta medica":
             return 0
         else:
-            estados[indice] = "Alta médica"
+            estados[indice] = "Alta medica"
             return 1
 
 
@@ -136,7 +135,7 @@ def esta_internado(dnis, estados, dni_buscado):
 
 
 def obtener_indices_internados(estados):
-    #Devuelve los indices de pacientes internados usando filter() y lambda.
+    #Devuelve los indices de pacientes internados usando filter() y lambda
     return list(filter(lambda i: estados[i] == "Internado", range(len(estados))))
 
 
