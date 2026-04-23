@@ -1,85 +1,539 @@
-# ------------------ TURNOS ------------------
+normalizar_nombre = lambda texto: texto.strip().title()
+normalizar_texto = lambda texto: texto.strip()
 
-turnos = []
-turnos_disponibles = ["Lunes 08:00", "Lunes 09:00", "Lunes 10:00", "Martes 08:00", "Martes 09:00", "Martes 10:00", "Miercoles 08:00", "Miercoles 09:00", "Miercoles 10:00", "Jueves 08:00", "Jueves 09:00", "Jueves 10:00", "Viernes 08:00", "Viernes 09:00", "Viernes 10:00"]
 
-# ------------------ MENU PRINCIPAL ----------
-opcion = -1
+def contar_lista(lista):
+    #Cuenta la cantidad de elementos de una lista
+    contador = 0
+    for _ in lista:
+        contador = contador + 1
+    return contador
 
-while opcion != 0:
-    print("\n--- MENU PRINCIPAL ---")
-    print("[1] Ver turnos disponibles")
-    print("[2] Reserva de turnos")
-    print("[3] Gestion de pacientes")
-    print("[4] Gestion de camas")
-    print("[5] Registro Clinico")
-    print("[0] Salir")
 
-    op = int(input("Opcion: "))
-    # ----------TURNOS-------------
-    if op == 1:
-        print("\n--- TURNOS DISPONIBLES ---")
+def buscar_paciente(dnis, dni_buscado):
+    #Busca un paciente por DNI y devuelve su indice o -1 si no existe
+    dni_buscado = dni_buscado.strip()
 
-        hay_disponibles = False
-        i = 0
-        while i < len(turnos_disponibles):
-            if turnos_disponibles[i] not in turnos:
-                print("-", turnos_disponibles[i])
-                hay_disponibles = True
-            i = i + 1
+    i = 0
+    while i < len(dnis) and dnis[i] != dni_buscado:
+        i = i + 1
 
-        if not hay_disponibles:
-            print("No hay turnos disponibles.")
-        elif op == 2:
-            turno = input("Ingrese el turno a agendar: ")
+    if i < len(dnis):
+        return i
+    else:
+        return -1
 
-            if turno in turnos_disponibles and turno not in turnos:
-                turnos.append(turno)
-                print(f"Turno '{turno}' agendado exitosamente.")
-            else:
-                print("Turno inválido o ya ocupado.")
 
-        elif op == 3:
-            turno_actual = input("Ingrese el turno a modificar: ")
+def registrar_paciente(dnis, nombres, edades, diagnosticos, estados,
+                       dni, nombre, edad, diagnostico, estado_inicial="Ambulatorio"):
 
-            if turno_actual in turnos:
-                nuevo_turno = input("Ingrese el nuevo turno: ")
+    #Registra un paciente nuevo si el DNI no existe. Devuelve True si se registro y False si ya existia
+    if buscar_paciente(dnis, dni) != -1:
+        return False
 
-                if nuevo_turno in turnos_disponibles and nuevo_turno not in turnos:
-                    i = 0
-                    while i < len(turnos):
-                        if turnos[i] == turno_actual:
-                            turnos[i] = nuevo_turno
-                        i = i + 1
+    dnis.append(normalizar_texto(dni))
+    nombres.append(normalizar_nombre(nombre))
+    edades.append(edad)
+    diagnosticos.append(normalizar_texto(diagnostico))
+    estados.append(estado_inicial)
 
-                    print(f"Turno '{turno_actual}' modificado a '{nuevo_turno}'.")
-                else:
-                    print("El nuevo turno no es válido o ya está ocupado.")
-            else:
-                print("El turno no existe.")
+    return True
+
+
+def mostrar_paciente(dnis, nombres, edades, diagnosticos, estados, dni_buscado):
+    #Muestra por pantalla los datos de UN paciente buscado por DNI
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        print("No se encontro ningun paciente con ese DNI.")
+    else:
+        print("----- DATOS DEL PACIENTE -----")
+        print("DNI:", dnis[indice])
+        print("Nombre:", nombres[indice])
+        print("Edad:", edades[indice])
+        print("Diagnostico:", diagnosticos[indice])
+        print("Estado:", estados[indice])
+        print("------------------------------")
+
+
+def obtener_resumenes_pacientes(dnis, nombres, estados):
+    #Se usa para mostrar todos los pacientes de una forma mas ordenada
+    return list(map(lambda i: f"DNI: {dnis[i]} - Nombre: {nombres[i]} - Estado: {estados[i]}", range(len(dnis))))
+
+
+def mostrar_todos_los_pacientes(dnis, nombres, estados):
+    #Muestra todos los pacientes registrados
+    total = contar_lista(dnis)
+
+    if total == 0:
+        print("No hay pacientes cargados.")
+    else:
+        print("----- LISTA DE PACIENTES -----")
+        resumenes = obtener_resumenes_pacientes(dnis, nombres, estados)
+        for resumen in resumenes:
+            print(resumen)
+        print("------------------------------")
+
+
+def actualizar_diagnostico(dnis, diagnosticos, dni_buscado, nuevo_diagnostico):
+    #Actualiza el diagnostico de un paciente
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        return False
+    else:
+        diagnosticos[indice] = normalizar_texto(nuevo_diagnostico)
+        return True
+
+
+def internar_paciente(dnis, estados, dni_buscado):
+    #Pasa el estado del paciente a Internado
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        return -1
+    elif estados[indice] == "Internado":
+        return 0
+    else:
+        estados[indice] = "Internado"
+        return 1
+
+
+def dar_alta(dnis, estados, dni_buscado):
+    #Pasa el estado del paciente a Alta medica
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        return -1
+    else:
+        if estados[indice] == "Alta medica":
+            return 0
+        else:
+            estados[indice] = "Alta medica"
+        
+            for i in range(len(camas)):
+                if camas[i] == dni_buscado:
+                    camas[i] = "Libre"
             
-        elif op == 4:
-            turno_a_eliminar = input("Ingrese el turno a eliminar: ")
+        return 1
 
-            if turno_a_eliminar in turnos:
-                i = 0
-                while i < len(turnos):
-                    if turnos[i] == turno_a_eliminar:
-                        turnos.pop(i)
-                        break
-                    i = i + 1
 
-                print(f"Turno '{turno_a_eliminar}' eliminado exitosamente.")
+def obtener_indices_internados(estados):
+    #Devuelve los indices de pacientes internados usando filter() y lambda
+    return list(filter(lambda i: estados[i] == "Internado", range(len(estados))))
+
+
+def mostrar_pacientes_internados(dnis, nombres, estados):
+    #Muestra unicamente los pacientes que estan en estado de Internado
+    indices_internados = obtener_indices_internados(estados)
+
+    if len(indices_internados) == 0:
+        print("No hay pacientes internados.")
+    else:
+        print("----- PACIENTES INTERNADOS -----")
+        for i in indices_internados:
+            print(f"DNI: {dnis[i]} - Nombre: {nombres[i]} - Estado: {estados[i]}")
+        print("--------------------------------")
+
+
+def validar_texto_no_vacio(texto):
+    #Valida que el texto no este vacio
+    return texto.strip() != ""
+
+
+def solo_numeros(texto):
+    #Valida que un texto tenga solo numeros
+    texto = texto.strip()
+
+    if texto == "":
+        return False
+
+    i = 0
+    while i < len(texto):
+        if texto[i] < "0" or texto[i] > "9":
+            return False
+        i = i + 1
+
+    return True
+
+
+def validar_dni(dni):
+    #Valida que el DNI tenga 7 u 8 numeros
+    dni = dni.strip()
+
+    if solo_numeros(dni) and (len(dni) == 7 or len(dni) == 8):
+        return True
+    else:
+        return False
+
+
+def pedir_dni(mensaje):
+    #Pide un DNI valido
+    dni = input(mensaje).strip()
+
+    while not validar_dni(dni):
+        print("Error. El DNI debe tener 7 u 8 numeros.")
+        dni = input(mensaje).strip()
+
+    return dni
+
+
+def validar_nombre(nombre):
+    #Valida que el nombre tenga solo letras y espacios
+    nombre = nombre.strip()
+    letras_validas = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúÁÉÍÓÚñÑ "
+
+    if len(nombre) < 2:
+        return False
+
+    i = 0
+    while i < len(nombre):
+        if nombre[i] not in letras_validas:
+            return False
+        i = i + 1
+
+    return True
+
+
+def pedir_nombre(mensaje):
+    #Pide un nombre valido
+    nombre = input(mensaje).strip()
+
+    while not validar_nombre(nombre):
+        print("Error. Ingrese solo letras y espacios.")
+        nombre = input(mensaje).strip()
+
+    return nombre
+
+
+def validar_edad(edad_texto):
+    #Valida que la edad sea un numero entre 0 y 120
+    edad_texto = edad_texto.strip()
+
+    if not solo_numeros(edad_texto):
+        return False
+
+    edad = int(edad_texto)
+
+    if edad >= 0 and edad <= 120:
+        return True
+    else:
+        return False
+
+
+def pedir_edad(mensaje):
+    #Pide una edad valida
+    edad_texto = input(mensaje).strip()
+
+    while not validar_edad(edad_texto):
+        print("Error. Ingrese una edad valida entre 0 y 120.")
+        edad_texto = input(mensaje).strip()
+
+    return int(edad_texto)
+
+
+def validar_diagnostico(diagnostico):
+    #Valida que el diagnostico no este vacio
+    return validar_texto_no_vacio(diagnostico)
+
+
+def pedir_diagnostico(mensaje):
+    #Pide un diagnostico valido
+    diagnostico = input(mensaje).strip()
+
+    while not validar_diagnostico(diagnostico):
+        print("Error. El diagnostico no puede estar vacio.")
+        diagnostico = input(mensaje).strip()
+
+    return diagnostico
+
+
+def pedir_horario(mensaje):
+    #Pide un horario valido dentro de los horarios del sistema
+    hora = input(mensaje).strip()
+
+    while hora not in horarios:
+        print("Error. Ingrese un horario valido.")
+        print("Horarios validos:", horarios)
+        hora = input(mensaje).strip()
+
+    return hora
+
+
+def pedir_opcion(mensaje, minimo, maximo):
+    #Pide una opcion valida de menu
+    opcion_texto = input(mensaje).strip()
+
+    while True:
+        if solo_numeros(opcion_texto):
+            opcion = int(opcion_texto)
+            if opcion >= minimo and opcion <= maximo:
+                return opcion
+
+        print("Error. Ingrese una opcion valida.")
+        opcion_texto = input(mensaje).strip()
+
+
+def pedir_estado_inicial():
+    #Permite elegir el estado inicial del paciente
+    print("Seleccione el estado inicial del paciente:")
+    print("1 - Ambulatorio")
+    print("2 - Internado")
+
+    opcion = pedir_opcion("Opcion: ", 1, 2)
+
+    if opcion == 1:
+        return "Ambulatorio"
+    else:
+        return "Internado"
+
+def mostrar_camas():
+    #Muestra el estado de las camas
+    print("--- ESTADO DE LAS CAMAS ---")
+    for i in range(len(camas)):
+        print(f"Cama {numeros_camas[i]} -> {camas[i]}")
+
+def asignar_cama():
+    #Asigna una cama a un paciente internado
+    dni = pedir_dni("Ingrese el DNI del paciente a asignar cama: ")
+    indice_paciente = buscar_paciente(dnis, dni)
+    if indice_paciente == -1:
+        print("No se encontro ningun paciente con ese DNI.")
+        return
+    elif estados[indice_paciente] != "Internado":
+        print("El paciente no esta internado, no se le puede asignar una cama.")
+        return
+    for i in range(len(camas)):
+        if camas[i] == "Libre":
+            camas[i] = dni
+            print(f"Cama {numeros_camas[i]} asignada a correctamente.")
+            return
+    print("No hay camas disponibles para asignar.")
+
+def liberar_cama():
+    dni = pedir_dni("Ingrese el DNI del paciente a liberar cama: ")
+
+    for i in range(len(camas)):
+        if camas[i] == dni:
+            camas[i] = "Libre"
+            print(f"Cama {numeros_camas[i]} liberada correctamente.")
+            return
+    print("No se encontro ninguna cama asignada a ese paciente.")
+
+
+    
+
+# ------------------ DATOS ------------------
+dnis = []
+nombres = []
+edades = []
+diagnosticos = []
+estados = []
+turnos = ["Libre", "Libre", "Libre", "Libre", "Libre"]
+horarios = ["08:00", "09:00", "10:00", "11:00", "12:00"]
+camas = ["Libre", "Libre", "Libre", "Libre", "Libre"]
+numeros_camas = [1, 2, 3, 4, 5]
+
+
+
+def mostrar_turnos():
+    #Muestra todos los turnos con su estado
+    print("--- ESTADO DE LOS TURNOS ---")
+    for i in range(len(horarios)):
+        print(horarios[i], "->", turnos[i])
+
+
+def asignar_turnos():
+    #Asigna un turno si el horario existe y esta libre
+    hora = pedir_horario("Ingrese la hora del turno: ")
+    nombre = pedir_nombre("Ingrese el nombre del paciente: ")
+
+    for i in range(len(horarios)):
+        if horarios[i] == hora:
+            if turnos[i] == "Libre":
+                turnos[i] = nombre
+                print("Turno asignado")
             else:
-                print("El turno no existe.")
+                print("Turno ocupado")
+            return
 
-        elif op == 5:
-            
-            if len(turnos) > 0:
-                print("\n--- TURNOS AGENDADOS ---")
-                i = 0
-                while i < len(turnos):
-                    print("[", i + 1, "]", turnos[i])
-                    i = i + 1
+
+def modificar_turno():
+    #Modifica un turno existente por otro horario libre
+    hora_actual = pedir_horario("Ingrese la hora del turno a modificar: ")
+
+    for i in range(len(horarios)):
+        if horarios[i] == hora_actual:
+            if turnos[i] == "Libre":
+                print("Ese turno esta libre, no hay nada para modificar.")
+                return
+
+            nombre_paciente = turnos[i]
+            print("Turno actual asignado a:", nombre_paciente)
+
+            hora_nueva = pedir_horario("Ingrese la nueva hora del turno: ")
+
+            if hora_nueva == hora_actual:
+                print("Ingreso el mismo horario.")
+                return
+
+            j = 0
+            while j < len(horarios):
+                if horarios[j] == hora_nueva:
+                    if turnos[j] == "Libre":
+                        turnos[j] = nombre_paciente
+                        turnos[i] = "Libre"
+                        print("Turno modificado correctamente.")
+                    else:
+                        print("El nuevo horario ya esta ocupado.")
+                    return
+                j = j + 1
+
+
+def cancelar_turno():
+    #Cancela un turno si el horario existe y esta ocupado
+    hora = pedir_horario("Ingrese la hora del turno a cancelar: ")
+
+    for i in range(len(horarios)):
+        if horarios[i] == hora:
+            if turnos[i] != "Libre":
+                turnos[i] = "Libre"
+                print("Turno cancelado")
             else:
-                print("No hay turnos agendados.")
+                print("El turno ya esta libre")
+            return
+
+
+def menu_pacientes():
+    #Muestra el menu de gestion de pacientes
+    subopcion = -1
+
+    while subopcion != 0:
+        print("\n--- GESTION DE PACIENTES ---")
+        print("1 - Registrar paciente")
+        print("2 - Buscar paciente")
+        print("3 - Mostrar todos los pacientes")
+        print("4 - Actualizar diagnostico")
+        print("5 - Dar alta")
+        print("6 - Mostrar pacientes internados")
+        print("7 - Internar paciente")
+        print("8 - Ver estado de camas")
+        print("0 - Volver al menu principal")
+
+        subopcion = pedir_opcion("Opcion: ", 0, 8)
+
+        if subopcion == 1:
+            dni = pedir_dni("Ingrese el DNI del paciente: ")
+            nombre = pedir_nombre("Ingrese el nombre del paciente: ")
+            edad = pedir_edad("Ingrese la edad del paciente: ")
+            diagnostico = pedir_diagnostico("Ingrese el diagnostico del paciente: ")
+            estado = pedir_estado_inicial()
+
+            if registrar_paciente(dnis, nombres, edades, diagnosticos, estados,
+                                  dni, nombre, edad, diagnostico, estado):
+                print("Paciente registrado exitosamente.")
+            else:
+                print("Ya existe un paciente con ese DNI.")
+
+        elif subopcion == 2:
+            dni = pedir_dni("Ingrese el DNI del paciente a buscar: ")
+            mostrar_paciente(dnis, nombres, edades, diagnosticos, estados, dni)
+
+        elif subopcion == 3:
+            mostrar_todos_los_pacientes(dnis, nombres, estados)
+
+        elif subopcion == 4:
+            dni = pedir_dni("Ingrese el DNI del paciente a actualizar: ")
+            nuevo_diagnostico = pedir_diagnostico("Ingrese el nuevo diagnostico: ")
+
+            if actualizar_diagnostico(dnis, diagnosticos, dni, nuevo_diagnostico):
+                print("Diagnostico actualizado exitosamente.")
+            else:
+                print("No se encontro ningun paciente con ese DNI.")
+
+        elif subopcion == 5:
+            dni = pedir_dni("Ingrese el DNI del paciente a dar de alta: ")
+            resultado = dar_alta(dnis, estados, dni)
+
+            if resultado == 1:
+                print("Paciente dado de alta exitosamente.")
+            elif resultado == 0:
+                print("El paciente ya tiene el alta medica.")
+            else:
+                print("No se encontro ningun paciente con ese DNI.")
+
+        elif subopcion == 6:
+            mostrar_pacientes_internados(dnis, nombres, estados)
+
+        elif subopcion == 7:
+            dni = pedir_dni("Ingrese el DNI del paciente a internar: ")
+            resultado = internar_paciente(dnis, estados, dni)
+
+            if resultado == 1:
+                print("Paciente internado exitosamente.")
+            elif resultado == 0:
+                print("El paciente ya estaba internado.")
+            else:
+                print("No se encontro ningun paciente con ese DNI.")
+
+        elif subopcion == 8:
+            menu_camas()
+
+        elif subopcion == 0:
+            print("Volviendo al menu principal...")
+
+def menu_camas():
+    opcion = -1
+
+    while opcion != 0:
+        print("\n--- GESTION DE CAMAS ---")
+        print("1 -- Ver camas --")
+        print("2 -- Asignar cama a paciente internado --")
+        print("3 -- Liberar cama --")
+        print("0 -- Volver al menu principal --")
+        opcion = pedir_opcion("Opcion: ", 0, 3)
+
+        if opcion == 1:
+            mostrar_camas()
+        elif opcion == 2:
+            asignar_cama()
+        elif opcion == 3:
+            liberar_cama()
+
+
+def main():
+    #Controla el menu principal del sistema
+    opcion = -1
+
+    while opcion != 0:
+        print("\n--- MENU PRINCIPAL ---")
+        print("[1] Ver turnos")
+        print("[2] Reserva de turnos")
+        print("[3] Modificar turnos")
+        print("[4] Cancelacion de turnos")
+        print("[5] Gestion de pacientes")
+        print("[0] Salir")
+
+        opcion = pedir_opcion("Opcion: ", 0, 5)
+
+        if opcion == 1:
+            print("\n--- TURNOS ---")
+            mostrar_turnos()
+
+        elif opcion == 2:
+            asignar_turnos()
+
+        elif opcion == 3:
+            modificar_turno()
+
+        elif opcion == 4:
+            cancelar_turno()
+
+        elif opcion == 5:
+            menu_pacientes()
+
+        elif opcion == 0:
+            print("Saliendo del sistema...")
+
+if __name__ == "__main__":
+    main()
