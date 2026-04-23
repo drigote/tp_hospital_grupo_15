@@ -86,17 +86,6 @@ def actualizar_diagnostico(dnis, diagnosticos, dni_buscado, nuevo_diagnostico):
         return True
 
 
-def cambiar_estado(dnis, estados, dni_buscado, nuevo_estado):
-    #Cambia el estado general de un paciente
-    indice = buscar_paciente(dnis, dni_buscado)
-
-    if indice == -1:
-        return False
-    else:
-        estados[indice] = normalizar_texto(nuevo_estado).title()
-        return True
-
-
 def internar_paciente(dnis, estados, dni_buscado):
     #Pasa el estado del paciente a Internado
     indice = buscar_paciente(dnis, dni_buscado)
@@ -124,16 +113,6 @@ def dar_alta(dnis, estados, dni_buscado):
             return 1
 
 
-def esta_internado(dnis, estados, dni_buscado):
-    #Devuelve True si el paciente esta internado
-    indice = buscar_paciente(dnis, dni_buscado)
-
-    if indice == -1:
-        return False
-    else:
-        return estados[indice] == "Internado"
-
-
 def obtener_indices_internados(estados):
     #Devuelve los indices de pacientes internados usando filter() y lambda
     return list(filter(lambda i: estados[i] == "Internado", range(len(estados))))
@@ -150,6 +129,7 @@ def mostrar_pacientes_internados(dnis, nombres, estados):
         for i in indices_internados:
             print(f"DNI: {dnis[i]} - Nombre: {nombres[i]} - Estado: {estados[i]}")
         print("--------------------------------")
+
 
 def validar_texto_no_vacio(texto):
     #Valida que el texto no este vacio
@@ -263,30 +243,30 @@ def pedir_diagnostico(mensaje):
     return diagnostico
 
 
-def validar_opcion(opcion_texto, minimo, maximo):
-    #Valida una opcion de menu dentro de un rango
-    opcion_texto = opcion_texto.strip()
+def pedir_horario(mensaje):
+    #Pide un horario valido dentro de los horarios del sistema
+    hora = input(mensaje).strip()
 
-    if solo_numeros(opcion_texto):
-        opcion = int(opcion_texto)
+    while hora not in horarios:
+        print("Error. Ingrese un horario valido.")
+        print("Horarios validos:", horarios)
+        hora = input(mensaje).strip()
 
-        if opcion >= minimo and opcion <= maximo:
-            return True
-        else:
-            return False
-    else:
-        return False
+    return hora
 
 
 def pedir_opcion(mensaje, minimo, maximo):
     #Pide una opcion valida de menu
     opcion_texto = input(mensaje).strip()
 
-    while not validar_opcion(opcion_texto, minimo, maximo):
+    while True:
+        if solo_numeros(opcion_texto):
+            opcion = int(opcion_texto)
+            if opcion >= minimo and opcion <= maximo:
+                return opcion
+
         print("Error. Ingrese una opcion valida.")
         opcion_texto = input(mensaje).strip()
-
-    return int(opcion_texto)
 
 
 def pedir_estado_inicial():
@@ -301,7 +281,8 @@ def pedir_estado_inicial():
         return "Ambulatorio"
     else:
         return "Internado"
-    
+
+
 # ------------------ DATOS ------------------
 dnis = []
 nombres = []
@@ -321,12 +302,8 @@ def mostrar_turnos():
 
 def asignar_turnos():
     #Asigna un turno si el horario existe y esta libre
-    hora = input("Ingrese la hora del turno: ").strip()
-    nombre = input("Ingrese el nombre del paciente: ").strip()
-
-    while not validar_texto_no_vacio(nombre):
-        print("Error. El nombre no puede estar vacio.")
-        nombre = input("Ingrese el nombre del paciente: ").strip()
+    hora = pedir_horario("Ingrese la hora del turno: ")
+    nombre = pedir_nombre("Ingrese el nombre del paciente: ")
 
     for i in range(len(horarios)):
         if horarios[i] == hora:
@@ -337,12 +314,42 @@ def asignar_turnos():
                 print("Turno ocupado")
             return
 
-    print("Horario inexistente")
+
+def modificar_turno():
+    #Modifica un turno existente por otro horario libre
+    hora_actual = pedir_horario("Ingrese la hora del turno a modificar: ")
+
+    for i in range(len(horarios)):
+        if horarios[i] == hora_actual:
+            if turnos[i] == "Libre":
+                print("Ese turno esta libre, no hay nada para modificar.")
+                return
+
+            nombre_paciente = turnos[i]
+            print("Turno actual asignado a:", nombre_paciente)
+
+            hora_nueva = pedir_horario("Ingrese la nueva hora del turno: ")
+
+            if hora_nueva == hora_actual:
+                print("Ingreso el mismo horario.")
+                return
+
+            j = 0
+            while j < len(horarios):
+                if horarios[j] == hora_nueva:
+                    if turnos[j] == "Libre":
+                        turnos[j] = nombre_paciente
+                        turnos[i] = "Libre"
+                        print("Turno modificado correctamente.")
+                    else:
+                        print("El nuevo horario ya esta ocupado.")
+                    return
+                j = j + 1
 
 
 def cancelar_turno():
     #Cancela un turno si el horario existe y esta ocupado
-    hora = input("Ingrese la hora del turno a cancelar: ").strip()
+    hora = pedir_horario("Ingrese la hora del turno a cancelar: ")
 
     for i in range(len(horarios)):
         if horarios[i] == hora:
@@ -352,8 +359,6 @@ def cancelar_turno():
             else:
                 print("El turno ya esta libre")
             return
-
-    print("Horario inexistente")
 
 
 def menu_pacientes():
@@ -437,25 +442,29 @@ def main():
 
     while opcion != 0:
         print("\n--- MENU PRINCIPAL ---")
-        print("[1] Ver turnos disponibles")
+        print("[1] Ver turnos")
         print("[2] Reserva de turnos")
-        print("[3] Cancelacion de turnos")
-        print("[4] Gestion de pacientes")
+        print("[3] Modificar turnos")
+        print("[4] Cancelacion de turnos")
+        print("[5] Gestion de pacientes")
         print("[0] Salir")
 
-        opcion = pedir_opcion("Opcion: ", 0, 4)
+        opcion = pedir_opcion("Opcion: ", 0, 5)
 
         if opcion == 1:
-            print("\n--- TURNOS DISPONIBLES ---")
+            print("\n--- TURNOS ---")
             mostrar_turnos()
 
         elif opcion == 2:
             asignar_turnos()
 
         elif opcion == 3:
-            cancelar_turno()
+            modificar_turno()
 
         elif opcion == 4:
+            cancelar_turno()
+
+        elif opcion == 5:
             menu_pacientes()
 
         elif opcion == 0:
