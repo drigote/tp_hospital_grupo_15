@@ -110,7 +110,12 @@ def dar_alta(dnis, estados, dni_buscado):
             return 0
         else:
             estados[indice] = "Alta medica"
-            return 1
+        
+            for i in range(len(camas)):
+                if camas[i] == dni_buscado:
+                    camas[i] = "Libre"
+            
+        return 1
 
 
 def obtener_indices_internados(estados):
@@ -282,6 +287,41 @@ def pedir_estado_inicial():
     else:
         return "Internado"
 
+def mostrar_camas():
+    #Muestra el estado de las camas
+    print("--- ESTADO DE LAS CAMAS ---")
+    for i in range(len(camas)):
+        print(f"Cama {numeros_camas[i]} -> {camas[i]}")
+
+def asignar_cama():
+    #Asigna una cama a un paciente internado
+    dni = pedir_dni("Ingrese el DNI del paciente a asignar cama: ")
+    indice_paciente = buscar_paciente(dnis, dni)
+    if indice_paciente == -1:
+        print("No se encontro ningun paciente con ese DNI.")
+        return
+    elif estados[indice_paciente] != "Internado":
+        print("El paciente no esta internado, no se le puede asignar una cama.")
+        return
+    for i in range(len(camas)):
+        if camas[i] == "Libre":
+            camas[i] = dni
+            print(f"Cama {numeros_camas[i]} asignada a correctamente.")
+            return
+    print("No hay camas disponibles para asignar.")
+
+def liberar_cama():
+    dni = pedir_dni("Ingrese el DNI del paciente a liberar cama: ")
+
+    for i in range(len(camas)):
+        if camas[i] == dni:
+            camas[i] = "Libre"
+            print(f"Cama {numeros_camas[i]} liberada correctamente.")
+            return
+    print("No se encontro ninguna cama asignada a ese paciente.")
+
+
+    
 
 # ------------------ DATOS ------------------
 dnis = []
@@ -291,6 +331,9 @@ diagnosticos = []
 estados = []
 turnos = ["Libre", "Libre", "Libre", "Libre", "Libre"]
 horarios = ["08:00", "09:00", "10:00", "11:00", "12:00"]
+camas = ["Libre", "Libre", "Libre", "Libre", "Libre"]
+numeros_camas = [1, 2, 3, 4, 5]
+
 
 
 def mostrar_turnos():
@@ -374,9 +417,10 @@ def menu_pacientes():
         print("5 - Dar alta")
         print("6 - Mostrar pacientes internados")
         print("7 - Internar paciente")
+        print("8 - Ver estado de camas")
         print("0 - Volver al menu principal")
 
-        subopcion = pedir_opcion("Opcion: ", 0, 7)
+        subopcion = pedir_opcion("Opcion: ", 0, 8)
 
         if subopcion == 1:
             dni = pedir_dni("Ingrese el DNI del paciente: ")
@@ -432,8 +476,29 @@ def menu_pacientes():
             else:
                 print("No se encontro ningun paciente con ese DNI.")
 
+        elif subopcion == 8:
+            menu_camas()
+
         elif subopcion == 0:
             print("Volviendo al menu principal...")
+
+def menu_camas():
+    opcion = -1
+
+    while opcion != 0:
+        print("\n--- GESTION DE CAMAS ---")
+        print("1 -- Ver camas --")
+        print("2 -- Asignar cama a paciente internado --")
+        print("3 -- Liberar cama --")
+        print("0 -- Volver al menu principal --")
+        opcion = pedir_opcion("Opcion: ", 0, 3)
+
+        if opcion == 1:
+            mostrar_camas()
+        elif opcion == 2:
+            asignar_cama()
+        elif opcion == 3:
+            liberar_cama()
 
 
 def main():
@@ -469,7 +534,6 @@ def main():
 
         elif opcion == 0:
             print("Saliendo del sistema...")
-
 
 if __name__ == "__main__":
     main()
