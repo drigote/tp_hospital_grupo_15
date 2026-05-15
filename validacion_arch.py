@@ -1,11 +1,23 @@
-ESTADOS_CAMA_VALIDOS = ("Libre", "Ocupada", "Limpieza", "Mantenimiento")
+import re
+
 ESTADOS_PACIENTE_VALIDOS = ("Ambulatorio", "Internado", "Alta medica")
+ESTADOS_CAMA_VALIDOS = ("Libre", "Ocupada", "Mantenimiento")
+SECTORES_VALIDOS = ("Guardia", "Clinica medica", "UTI", "Pediatria")
 
 
 def validar_texto_no_vacio(texto):
     #Valida que el texto no este vacio
     return texto.strip() != ""
 
+
+def validar_texto_largo(texto, minimo, maximo):
+    #Valida que un texto tenga un largo dentro de un rango
+    texto = texto.strip()
+
+    if len(texto) < minimo or len(texto) > maximo:
+        return False
+    else:
+        return True
 
 
 def solo_numeros(texto):
@@ -24,16 +36,14 @@ def solo_numeros(texto):
     return True
 
 
-
 def validar_dni(dni):
-    #Valida que el DNI tenga 7 u 8 numeros
+    #Valida que el DNI tenga 7 u 8 numeros usando regex
     dni = dni.strip()
 
-    if solo_numeros(dni) and (len(dni) == 7 or len(dni) == 8):
+    if re.fullmatch(r"[0-9]{7,8}", dni):
         return True
     else:
         return False
-
 
 
 def pedir_dni(mensaje):
@@ -47,23 +57,14 @@ def pedir_dni(mensaje):
     return dni
 
 
-
 def validar_nombre(nombre):
-    #Valida que el nombre tenga solo letras y espacios
+    #Valida que el nombre tenga solo letras y espacios usando regex
     nombre = nombre.strip()
-    letras_validas = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúÁÉÍÓÚñÑ "
 
-    if len(nombre) < 2:
+    if re.fullmatch(r"[A-Za-zÁÉÍÓÚáéíóúÑñ ]{2,40}", nombre):
+        return True
+    else:
         return False
-
-    i = 0
-    while i < len(nombre):
-        if nombre[i] not in letras_validas:
-            return False
-        i = i + 1
-
-    return True
-
 
 
 def pedir_nombre(mensaje):
@@ -77,17 +78,19 @@ def pedir_nombre(mensaje):
     return nombre
 
 
-
 def validar_edad(edad_texto):
     #Valida que la edad sea un numero entre 0 y 120
     edad_texto = edad_texto.strip()
 
     try:
         edad = int(edad_texto)
-        return edad >= 0 and edad <= 120
+
+        if edad >= 0 and edad <= 120:
+            return True
+        else:
+            return False
     except ValueError:
         return False
-
 
 
 def pedir_edad(mensaje):
@@ -101,11 +104,14 @@ def pedir_edad(mensaje):
     return int(edad_texto)
 
 
-
 def validar_diagnostico(diagnostico):
-    #Valida que el diagnostico no este vacio
-    return validar_texto_no_vacio(diagnostico)
+    #Valida que el diagnostico no este vacio y tenga un largo razonable
+    diagnostico = diagnostico.strip()
 
+    if validar_texto_no_vacio(diagnostico) and validar_texto_largo(diagnostico, 3, 100):
+        return True
+    else:
+        return False
 
 
 def pedir_diagnostico(mensaje):
@@ -113,11 +119,73 @@ def pedir_diagnostico(mensaje):
     diagnostico = input(mensaje).strip()
 
     while not validar_diagnostico(diagnostico):
-        print("Error. El diagnostico no puede estar vacio.")
+        print("Error. El diagnostico no puede estar vacio y debe tener entre 3 y 100 caracteres.")
         diagnostico = input(mensaje).strip()
 
     return diagnostico
 
+
+def validar_alergias(alergias):
+    #Valida el campo de alergias
+    alergias = alergias.strip()
+
+    if validar_texto_no_vacio(alergias) and validar_texto_largo(alergias, 2, 100):
+        return True
+    else:
+        return False
+
+
+def pedir_alergias(mensaje):
+    #Pide una alergia valida
+    alergias = input(mensaje).strip()
+
+    while not validar_alergias(alergias):
+        print("Error. Ingrese una alergia valida o escriba Ninguna.")
+        alergias = input(mensaje).strip()
+
+    return alergias
+
+
+def validar_observacion(observacion):
+    #Valida una observacion clinica
+    observacion = observacion.strip()
+
+    if validar_texto_no_vacio(observacion) and validar_texto_largo(observacion, 3, 200):
+        return True
+    else:
+        return False
+
+
+def pedir_observacion(mensaje):
+    #Pide una observacion valida
+    observacion = input(mensaje).strip()
+
+    while not validar_observacion(observacion):
+        print("Error. Ingrese una observacion valida.")
+        observacion = input(mensaje).strip()
+
+    return observacion
+
+
+def validar_evolucion(evolucion):
+    #Valida el campo evolucion
+    evolucion = evolucion.strip()
+
+    if validar_texto_no_vacio(evolucion) and validar_texto_largo(evolucion, 3, 200):
+        return True
+    else:
+        return False
+
+
+def pedir_evolucion(mensaje):
+    #Pide una evolucion valida
+    evolucion = input(mensaje).strip()
+
+    while not validar_evolucion(evolucion):
+        print("Error. Ingrese una evolucion valida.")
+        evolucion = input(mensaje).strip()
+
+    return evolucion
 
 
 def validar_opcion(opcion_texto, minimo, maximo):
@@ -126,10 +194,13 @@ def validar_opcion(opcion_texto, minimo, maximo):
 
     try:
         opcion = int(opcion_texto)
-        return opcion >= minimo and opcion <= maximo
+
+        if opcion >= minimo and opcion <= maximo:
+            return True
+        else:
+            return False
     except ValueError:
         return False
-
 
 
 def pedir_opcion(mensaje, minimo, maximo):
@@ -142,6 +213,15 @@ def pedir_opcion(mensaje, minimo, maximo):
 
     return int(opcion_texto)
 
+
+def validar_estado_paciente(estado):
+    #Valida que el estado del paciente este dentro de los permitidos
+    estado = estado.strip().title()
+
+    if estado in ESTADOS_PACIENTE_VALIDOS:
+        return True
+    else:
+        return False
 
 
 def pedir_estado_inicial():
@@ -158,89 +238,19 @@ def pedir_estado_inicial():
         return "Internado"
 
 
-
-def validar_alergias(alergias):
-    #Valida el campo de alergias
-    return validar_texto_no_vacio(alergias)
-
-
-
-def pedir_alergias(mensaje):
-    #Pide las alergias del paciente
-    alergias = input(mensaje).strip()
-
-    while not validar_alergias(alergias):
-        print("Error. Ingrese las alergias o escriba Ninguna.")
-        alergias = input(mensaje).strip()
-
-    return alergias
-
-
-
-def validar_observacion(observacion):
-    #Valida una observacion clinica
-    return validar_texto_no_vacio(observacion)
-
-
-
-def pedir_observacion(mensaje):
-    #Pide una observacion valida
-    observacion = input(mensaje).strip()
-
-    while not validar_observacion(observacion):
-        print("Error. La observacion no puede estar vacia.")
-        observacion = input(mensaje).strip()
-
-    return observacion
-
-
-
-def validar_evolucion(evolucion):
-    #Valida una evolucion clinica
-    return validar_texto_no_vacio(evolucion)
-
-
-
-def pedir_evolucion(mensaje):
-    #Pide una evolucion valida
-    evolucion = input(mensaje).strip()
-
-    while not validar_evolucion(evolucion):
-        print("Error. La evolucion no puede estar vacia.")
-        evolucion = input(mensaje).strip()
-
-    return evolucion
-
-
-
-def validar_sector(sector):
-    #Valida que el sector no este vacio
-    return validar_texto_no_vacio(sector)
-
-
-
-def pedir_sector(mensaje):
-    #Pide un sector valido para camas o internacion
-    sector = input(mensaje).strip()
-
-    while not validar_sector(sector):
-        print("Error. El sector no puede estar vacio.")
-        sector = input(mensaje).strip()
-
-    return sector
-
-
-
 def validar_numero_cama(numero_cama_texto):
-    #Valida que el numero de cama sea entero positivo
+    #Valida que el numero de cama sea mayor a 0
     numero_cama_texto = numero_cama_texto.strip()
 
     try:
         numero_cama = int(numero_cama_texto)
-        return numero_cama > 0
+
+        if numero_cama > 0:
+            return True
+        else:
+            return False
     except ValueError:
         return False
-
 
 
 def pedir_numero_cama(mensaje):
@@ -254,12 +264,14 @@ def pedir_numero_cama(mensaje):
     return int(numero_cama_texto)
 
 
+def validar_estado_cama(estado_cama):
+    #Valida que el estado de cama este dentro de los permitidos
+    estado_cama = estado_cama.strip().title()
 
-def validar_estado_cama(estado):
-    #Valida el estado de una cama
-    estado = estado.strip().title()
-    return estado in ESTADOS_CAMA_VALIDOS
-
+    if estado_cama in ESTADOS_CAMA_VALIDOS:
+        return True
+    else:
+        return False
 
 
 def pedir_estado_cama():
@@ -267,41 +279,43 @@ def pedir_estado_cama():
     print("Seleccione el estado de la cama:")
     print("1 - Libre")
     print("2 - Ocupada")
-    print("3 - Limpieza")
-    print("4 - Mantenimiento")
+    print("3 - Mantenimiento")
 
-    opcion = pedir_opcion("Opcion: ", 1, 4)
+    opcion = pedir_opcion("Opcion: ", 1, 3)
 
     if opcion == 1:
         return "Libre"
     elif opcion == 2:
         return "Ocupada"
-    elif opcion == 3:
-        return "Limpieza"
     else:
         return "Mantenimiento"
 
 
+def validar_sector(sector):
+    #Valida que el sector este dentro de los permitidos
+    sector = sector.strip().title()
 
-def validar_estado_paciente(estado):
-    #Valida el estado general del paciente
-    estado = estado.strip().title()
-    return estado in ESTADOS_PACIENTE_VALIDOS
-
-
-
-def validar_lista_sin_duplicados(lista):
-    #Valida que una lista no tenga elementos repetidos
-    return len(lista) == len(set(lista))
+    if sector in SECTORES_VALIDOS:
+        return True
+    else:
+        return False
 
 
+def pedir_sector():
+    #Permite elegir el sector de una cama
+    print("Seleccione el sector:")
+    print("1 - Guardia")
+    print("2 - Clinica medica")
+    print("3 - UTI")
+    print("4 - Pediatria")
 
-def obtener_opciones_estado_cama():
-    #Devuelve los estados posibles de cama
-    return ESTADOS_CAMA_VALIDOS
+    opcion = pedir_opcion("Opcion: ", 1, 4)
 
-
-
-def obtener_opciones_estado_paciente():
-    #Devuelve los estados posibles del paciente
-    return ESTADOS_PACIENTE_VALIDOS
+    if opcion == 1:
+        return "Guardia"
+    elif opcion == 2:
+        return "Clinica medica"
+    elif opcion == 3:
+        return "UTI"
+    else:
+        return "Pediatria"
