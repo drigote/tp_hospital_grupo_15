@@ -26,8 +26,7 @@ def buscar_paciente(dnis, dni_buscado):
 
 def registrar_paciente(dnis, nombres, edades, diagnosticos, estados,
                        dni, nombre, edad, diagnostico, estado_inicial="Ambulatorio"):
-
-    #Registra un paciente nuevo si el DNI no existe. Devuelve True si se registro y False si ya existia
+    #Registra un paciente nuevo si el DNI no existe
     if buscar_paciente(dnis, dni) != -1:
         return False
 
@@ -41,7 +40,7 @@ def registrar_paciente(dnis, nombres, edades, diagnosticos, estados,
 
 
 def mostrar_paciente(dnis, nombres, edades, diagnosticos, estados, dni_buscado):
-    #Muestra por pantalla los datos de UN paciente buscado por DNI
+    #Muestra por pantalla los datos de un paciente buscado por DNI
     indice = buscar_paciente(dnis, dni_buscado)
 
     if indice == -1:
@@ -150,3 +149,65 @@ def mostrar_pacientes_internados(dnis, nombres, estados):
         for i in indices_internados:
             print(f"DNI: {dnis[i]} - Nombre: {nombres[i]} - Estado: {estados[i]}")
         print("--------------------------------")
+
+
+def actualizar_alergias(dnis, alergias, dni_buscado, nuevas_alergias):
+    #Actualiza las alergias de un paciente
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        return False
+    else:
+        alergias[indice] = normalizar_texto(nuevas_alergias)
+        return True
+
+
+def agregar_observacion(dnis, observaciones, dni_buscado, nueva_observacion):
+    #Agrega una observacion al registro del paciente
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        return False
+    else:
+        texto_nuevo = normalizar_texto(nueva_observacion)
+
+        if observaciones[indice] == "" or observaciones[indice] == "Sin observaciones":
+            observaciones[indice] = texto_nuevo
+        else:
+            observaciones[indice] = observaciones[indice] + " | " + texto_nuevo
+
+        return True
+
+
+def agregar_evolucion(dnis, evoluciones, dni_buscado, nueva_evolucion):
+    #Agrega una evolucion al registro del paciente
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        return False
+    else:
+        texto_nuevo = normalizar_texto(nueva_evolucion)
+
+        if evoluciones[indice] == "" or evoluciones[indice] == "Sin evolucion":
+            evoluciones[indice] = texto_nuevo
+        else:
+            evoluciones[indice] = evoluciones[indice] + " | " + texto_nuevo
+
+        return True
+
+
+def mostrar_registro_clinico(dnis, nombres, diagnosticos, alergias, observaciones, evoluciones, dni_buscado):
+    #Muestra el registro clinico ampliado de un paciente
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        print("No se encontro ningun paciente con ese DNI.")
+    else:
+        print("----- REGISTRO CLINICO -----")
+        print("DNI:", dnis[indice])
+        print("Nombre:", nombres[indice])
+        print("Diagnostico:", diagnosticos[indice])
+        print("Alergias:", alergias[indice])
+        print("Observaciones:", observaciones[indice])
+        print("Evolucion:", evoluciones[indice])
+        print("----------------------------")
