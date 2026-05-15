@@ -40,7 +40,7 @@ def validar_dni(dni):
     #Valida que el DNI tenga 7 u 8 numeros usando regex
     dni = dni.strip()
 
-    if re.fullmatch(r"[0-9]{7,8}", dni):
+    if re.match(r"^[0-9]{7,8}$", dni):
         return True
     else:
         return False
@@ -61,7 +61,7 @@ def validar_nombre(nombre):
     #Valida que el nombre tenga solo letras y espacios usando regex
     nombre = nombre.strip()
 
-    if re.fullmatch(r"[A-Za-zÁÉÍÓÚáéíóúÑñ ]{2,40}", nombre):
+    if re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ ]{2,40}$", nombre):
         return True
     else:
         return False
