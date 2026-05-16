@@ -1,5 +1,11 @@
+import re
+
 normalizar_nombre = lambda texto: texto.strip().title()
 normalizar_texto = lambda texto: texto.strip()
+
+ESTADOS_PACIENTE_VALIDOS = ("Ambulatorio", "Internado", "Alta medica")
+ESTADOS_CAMA_VALIDOS = ("Libre", "Ocupada", "Mantenimiento")
+SECTORES_VALIDOS = ("Guardia", "Clinica medica", "UTI", "Pediatria")
 
 
 def contar_lista(lista):
@@ -26,8 +32,7 @@ def buscar_paciente(dnis, dni_buscado):
 
 def registrar_paciente(dnis, nombres, edades, diagnosticos, estados,
                        dni, nombre, edad, diagnostico, estado_inicial="Ambulatorio"):
-
-    #Registra un paciente nuevo si el DNI no existe. Devuelve True si se registro y False si ya existia
+    #Registra un paciente nuevo si el DNI no existe
     if buscar_paciente(dnis, dni) != -1:
         return False
 
@@ -41,7 +46,7 @@ def registrar_paciente(dnis, nombres, edades, diagnosticos, estados,
 
 
 def mostrar_paciente(dnis, nombres, edades, diagnosticos, estados, dni_buscado):
-    #Muestra por pantalla los datos de UN paciente buscado por DNI
+    #Muestra por pantalla los datos de un paciente buscado por DNI
     indice = buscar_paciente(dnis, dni_buscado)
 
     if indice == -1:
@@ -86,6 +91,17 @@ def actualizar_diagnostico(dnis, diagnosticos, dni_buscado, nuevo_diagnostico):
         return True
 
 
+def cambiar_estado(dnis, estados, dni_buscado, nuevo_estado):
+    #Cambia el estado general de un paciente
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        return False
+    else:
+        estados[indice] = normalizar_texto(nuevo_estado).title()
+        return True
+
+
 def internar_paciente(dnis, estados, dni_buscado):
     #Pasa el estado del paciente a Internado
     indice = buscar_paciente(dnis, dni_buscado)
@@ -100,7 +116,7 @@ def internar_paciente(dnis, estados, dni_buscado):
 
 
 def dar_alta(dnis, estados, dni_buscado):
-    #Pasa el estado del paciente a Alta medica
+    #Pasa el estado del paciente a Alta medica y libera la cama si tiene una
     indice = buscar_paciente(dnis, dni_buscado)
 
     if indice == -1:
@@ -110,12 +126,22 @@ def dar_alta(dnis, estados, dni_buscado):
             return 0
         else:
             estados[indice] = "Alta medica"
-        
+
             for i in range(len(camas)):
                 if camas[i] == dni_buscado:
                     camas[i] = "Libre"
-            
-        return 1
+
+            return 1
+
+
+def esta_internado(dnis, estados, dni_buscado):
+    #Devuelve True si el paciente esta internado
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        return False
+    else:
+        return estados[indice] == "Internado"
 
 
 def obtener_indices_internados(estados):
@@ -136,9 +162,81 @@ def mostrar_pacientes_internados(dnis, nombres, estados):
         print("--------------------------------")
 
 
+def actualizar_alergias(dnis, alergias, dni_buscado, nuevas_alergias):
+    #Actualiza las alergias de un paciente
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        return False
+    else:
+        alergias[indice] = normalizar_texto(nuevas_alergias)
+        return True
+
+
+def agregar_observacion(dnis, observaciones, dni_buscado, nueva_observacion):
+    #Agrega una observacion al registro del paciente
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        return False
+    else:
+        texto_nuevo = normalizar_texto(nueva_observacion)
+
+        if observaciones[indice] == "" or observaciones[indice] == "Sin observaciones":
+            observaciones[indice] = texto_nuevo
+        else:
+            observaciones[indice] = observaciones[indice] + " | " + texto_nuevo
+
+        return True
+
+
+def agregar_evolucion(dnis, evoluciones, dni_buscado, nueva_evolucion):
+    #Agrega una evolucion al registro del paciente
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        return False
+    else:
+        texto_nuevo = normalizar_texto(nueva_evolucion)
+
+        if evoluciones[indice] == "" or evoluciones[indice] == "Sin evolucion":
+            evoluciones[indice] = texto_nuevo
+        else:
+            evoluciones[indice] = evoluciones[indice] + " | " + texto_nuevo
+
+        return True
+
+
+def mostrar_registro_clinico(dnis, nombres, diagnosticos, alergias, observaciones, evoluciones, dni_buscado):
+    #Muestra el registro clinico ampliado de un paciente
+    indice = buscar_paciente(dnis, dni_buscado)
+
+    if indice == -1:
+        print("No se encontro ningun paciente con ese DNI.")
+    else:
+        print("----- REGISTRO CLINICO -----")
+        print("DNI:", dnis[indice])
+        print("Nombre:", nombres[indice])
+        print("Diagnostico:", diagnosticos[indice])
+        print("Alergias:", alergias[indice])
+        print("Observaciones:", observaciones[indice])
+        print("Evolucion:", evoluciones[indice])
+        print("----------------------------")
+
+
 def validar_texto_no_vacio(texto):
     #Valida que el texto no este vacio
     return texto.strip() != ""
+
+
+def validar_texto_largo(texto, minimo, maximo):
+    #Valida que un texto tenga un largo dentro de un rango
+    texto = texto.strip()
+
+    if len(texto) < minimo or len(texto) > maximo:
+        return False
+    else:
+        return True
 
 
 def solo_numeros(texto):
@@ -158,10 +256,10 @@ def solo_numeros(texto):
 
 
 def validar_dni(dni):
-    #Valida que el DNI tenga 7 u 8 numeros
+    #Valida que el DNI tenga 7 u 8 numeros usando regex
     dni = dni.strip()
 
-    if solo_numeros(dni) and (len(dni) == 7 or len(dni) == 8):
+    if re.match(r"^[0-9]{7,8}$", dni):
         return True
     else:
         return False
@@ -179,20 +277,13 @@ def pedir_dni(mensaje):
 
 
 def validar_nombre(nombre):
-    #Valida que el nombre tenga solo letras y espacios
+    #Valida que el nombre tenga solo letras y espacios usando regex
     nombre = nombre.strip()
-    letras_validas = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúÁÉÍÓÚñÑ "
 
-    if len(nombre) < 2:
+    if re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ ]{2,40}$", nombre):
+        return True
+    else:
         return False
-
-    i = 0
-    while i < len(nombre):
-        if nombre[i] not in letras_validas:
-            return False
-        i = i + 1
-
-    return True
 
 
 def pedir_nombre(mensaje):
@@ -210,14 +301,14 @@ def validar_edad(edad_texto):
     #Valida que la edad sea un numero entre 0 y 120
     edad_texto = edad_texto.strip()
 
-    if not solo_numeros(edad_texto):
-        return False
+    try:
+        edad = int(edad_texto)
 
-    edad = int(edad_texto)
-
-    if edad >= 0 and edad <= 120:
-        return True
-    else:
+        if edad >= 0 and edad <= 120:
+            return True
+        else:
+            return False
+    except ValueError:
         return False
 
 
@@ -233,8 +324,13 @@ def pedir_edad(mensaje):
 
 
 def validar_diagnostico(diagnostico):
-    #Valida que el diagnostico no este vacio
-    return validar_texto_no_vacio(diagnostico)
+    #Valida que el diagnostico no este vacio y tenga un largo razonable
+    diagnostico = diagnostico.strip()
+
+    if validar_texto_no_vacio(diagnostico) and validar_texto_largo(diagnostico, 3, 100):
+        return True
+    else:
+        return False
 
 
 def pedir_diagnostico(mensaje):
@@ -242,36 +338,109 @@ def pedir_diagnostico(mensaje):
     diagnostico = input(mensaje).strip()
 
     while not validar_diagnostico(diagnostico):
-        print("Error. El diagnostico no puede estar vacio.")
+        print("Error. El diagnostico no puede estar vacio y debe tener entre 3 y 100 caracteres.")
         diagnostico = input(mensaje).strip()
 
     return diagnostico
 
 
-def pedir_horario(mensaje):
-    #Pide un horario valido dentro de los horarios del sistema
-    hora = input(mensaje).strip()
+def validar_alergias(alergias):
+    #Valida el campo de alergias
+    alergias = alergias.strip()
 
-    while hora not in horarios:
-        print("Error. Ingrese un horario valido.")
-        print("Horarios validos:", horarios)
-        hora = input(mensaje).strip()
+    if validar_texto_no_vacio(alergias) and validar_texto_largo(alergias, 2, 100):
+        return True
+    else:
+        return False
 
-    return hora
+
+def pedir_alergias(mensaje):
+    #Pide una alergia valida
+    alergias = input(mensaje).strip()
+
+    while not validar_alergias(alergias):
+        print("Error. Ingrese una alergia valida o escriba Ninguna.")
+        alergias = input(mensaje).strip()
+
+    return alergias
+
+
+def validar_observacion(observacion):
+    #Valida una observacion clinica
+    observacion = observacion.strip()
+
+    if validar_texto_no_vacio(observacion) and validar_texto_largo(observacion, 3, 200):
+        return True
+    else:
+        return False
+
+
+def pedir_observacion(mensaje):
+    #Pide una observacion valida
+    observacion = input(mensaje).strip()
+
+    while not validar_observacion(observacion):
+        print("Error. Ingrese una observacion valida.")
+        observacion = input(mensaje).strip()
+
+    return observacion
+
+
+def validar_evolucion(evolucion):
+    #Valida el campo evolucion
+    evolucion = evolucion.strip()
+
+    if validar_texto_no_vacio(evolucion) and validar_texto_largo(evolucion, 3, 200):
+        return True
+    else:
+        return False
+
+
+def pedir_evolucion(mensaje):
+    #Pide una evolucion valida
+    evolucion = input(mensaje).strip()
+
+    while not validar_evolucion(evolucion):
+        print("Error. Ingrese una evolucion valida.")
+        evolucion = input(mensaje).strip()
+
+    return evolucion
+
+
+def validar_opcion(opcion_texto, minimo, maximo):
+    #Valida una opcion de menu dentro de un rango
+    opcion_texto = opcion_texto.strip()
+
+    try:
+        opcion = int(opcion_texto)
+
+        if opcion >= minimo and opcion <= maximo:
+            return True
+        else:
+            return False
+    except ValueError:
+        return False
 
 
 def pedir_opcion(mensaje, minimo, maximo):
     #Pide una opcion valida de menu
     opcion_texto = input(mensaje).strip()
 
-    while True:
-        if solo_numeros(opcion_texto):
-            opcion = int(opcion_texto)
-            if opcion >= minimo and opcion <= maximo:
-                return opcion
-
+    while not validar_opcion(opcion_texto, minimo, maximo):
         print("Error. Ingrese una opcion valida.")
         opcion_texto = input(mensaje).strip()
+
+    return int(opcion_texto)
+
+
+def validar_estado_paciente(estado):
+    #Valida que el estado del paciente este dentro de los permitidos
+    estado = estado.strip().title()
+
+    if estado in ESTADOS_PACIENTE_VALIDOS:
+        return True
+    else:
+        return False
 
 
 def pedir_estado_inicial():
@@ -287,30 +456,125 @@ def pedir_estado_inicial():
     else:
         return "Internado"
 
+
+def validar_numero_cama(numero_cama_texto):
+    #Valida que el numero de cama sea mayor a 0
+    numero_cama_texto = numero_cama_texto.strip()
+
+    try:
+        numero_cama = int(numero_cama_texto)
+
+        if numero_cama > 0:
+            return True
+        else:
+            return False
+    except ValueError:
+        return False
+
+
+def pedir_numero_cama(mensaje):
+    #Pide un numero de cama valido
+    numero_cama_texto = input(mensaje).strip()
+
+    while not validar_numero_cama(numero_cama_texto):
+        print("Error. Ingrese un numero de cama valido.")
+        numero_cama_texto = input(mensaje).strip()
+
+    return int(numero_cama_texto)
+
+
+def validar_estado_cama(estado_cama):
+    #Valida que el estado de cama este dentro de los permitidos
+    estado_cama = estado_cama.strip().title()
+
+    if estado_cama in ESTADOS_CAMA_VALIDOS:
+        return True
+    else:
+        return False
+
+
+def pedir_estado_cama():
+    #Permite elegir el estado de una cama
+    print("Seleccione el estado de la cama:")
+    print("1 - Libre")
+    print("2 - Ocupada")
+    print("3 - Mantenimiento")
+
+    opcion = pedir_opcion("Opcion: ", 1, 3)
+
+    if opcion == 1:
+        return "Libre"
+    elif opcion == 2:
+        return "Ocupada"
+    else:
+        return "Mantenimiento"
+
+
+def validar_sector(sector):
+    #Valida que el sector este dentro de los permitidos
+    sector = sector.strip().title()
+
+    if sector in SECTORES_VALIDOS:
+        return True
+    else:
+        return False
+
+
+def pedir_sector():
+    #Permite elegir el sector de una cama
+    print("Seleccione el sector:")
+    print("1 - Guardia")
+    print("2 - Clinica medica")
+    print("3 - UTI")
+    print("4 - Pediatria")
+
+    opcion = pedir_opcion("Opcion: ", 1, 4)
+
+    if opcion == 1:
+        return "Guardia"
+    elif opcion == 2:
+        return "Clinica medica"
+    elif opcion == 3:
+        return "UTI"
+    else:
+        return "Pediatria"
+
+
 def mostrar_camas():
     #Muestra el estado de las camas
     print("--- ESTADO DE LAS CAMAS ---")
     for i in range(len(camas)):
         print(f"Cama {numeros_camas[i]} -> {camas[i]}")
 
+
 def asignar_cama():
     #Asigna una cama a un paciente internado
     dni = pedir_dni("Ingrese el DNI del paciente a asignar cama: ")
     indice_paciente = buscar_paciente(dnis, dni)
+
     if indice_paciente == -1:
         print("No se encontro ningun paciente con ese DNI.")
         return
     elif estados[indice_paciente] != "Internado":
         print("El paciente no esta internado, no se le puede asignar una cama.")
         return
+
+    for i in range(len(camas)):
+        if camas[i] == dni:
+            print(f"El paciente ya tiene asignada la cama {numeros_camas[i]}.")
+            return
+
     for i in range(len(camas)):
         if camas[i] == "Libre":
             camas[i] = dni
-            print(f"Cama {numeros_camas[i]} asignada a correctamente.")
+            print(f"Cama {numeros_camas[i]} asignada correctamente.")
             return
+
     print("No hay camas disponibles para asignar.")
 
+
 def liberar_cama():
+    #Libera una cama ocupada por un paciente
     dni = pedir_dni("Ingrese el DNI del paciente a liberar cama: ")
 
     for i in range(len(camas)):
@@ -318,10 +582,9 @@ def liberar_cama():
             camas[i] = "Libre"
             print(f"Cama {numeros_camas[i]} liberada correctamente.")
             return
+
     print("No se encontro ninguna cama asignada a ese paciente.")
 
-
-    
 
 # ------------------ DATOS ------------------
 dnis = []
@@ -329,11 +592,13 @@ nombres = []
 edades = []
 diagnosticos = []
 estados = []
+alergias = []
+observaciones = []
+evoluciones = []
 turnos = ["Libre", "Libre", "Libre", "Libre", "Libre"]
 horarios = ["08:00", "09:00", "10:00", "11:00", "12:00"]
 camas = ["Libre", "Libre", "Libre", "Libre", "Libre"]
 numeros_camas = [1, 2, 3, 4, 5]
-
 
 
 def mostrar_turnos():
@@ -356,6 +621,18 @@ def asignar_turnos():
             else:
                 print("Turno ocupado")
             return
+
+
+def pedir_horario(mensaje):
+    #Pide un horario valido dentro de los horarios del sistema
+    hora = input(mensaje).strip()
+
+    while hora not in horarios:
+        print("Error. Ingrese un horario valido.")
+        print("Horarios validos:", horarios)
+        hora = input(mensaje).strip()
+
+    return hora
 
 
 def modificar_turno():
@@ -404,12 +681,78 @@ def cancelar_turno():
             return
 
 
+def menu_registro_clinico():
+    #Muestra el menu del registro clinico
+    opcion = -1
+
+    while opcion != 0:
+        print("\\n--- REGISTRO CLINICO ---")
+        print("1 - Actualizar alergias")
+        print("2 - Agregar observacion")
+        print("3 - Agregar evolucion")
+        print("4 - Mostrar registro clinico")
+        print("0 - Volver al menu de pacientes")
+
+        opcion = pedir_opcion("Opcion: ", 0, 4)
+
+        if opcion == 1:
+            dni = pedir_dni("Ingrese el DNI del paciente: ")
+            nuevas_alergias = pedir_alergias("Ingrese las alergias del paciente: ")
+
+            if actualizar_alergias(dnis, alergias, dni, nuevas_alergias):
+                print("Alergias actualizadas exitosamente.")
+            else:
+                print("No se encontro ningun paciente con ese DNI.")
+
+        elif opcion == 2:
+            dni = pedir_dni("Ingrese el DNI del paciente: ")
+            nueva_observacion = pedir_observacion("Ingrese la observacion: ")
+
+            if agregar_observacion(dnis, observaciones, dni, nueva_observacion):
+                print("Observacion agregada exitosamente.")
+            else:
+                print("No se encontro ningun paciente con ese DNI.")
+
+        elif opcion == 3:
+            dni = pedir_dni("Ingrese el DNI del paciente: ")
+            nueva_evolucion = pedir_evolucion("Ingrese la evolucion: ")
+
+            if agregar_evolucion(dnis, evoluciones, dni, nueva_evolucion):
+                print("Evolucion agregada exitosamente.")
+            else:
+                print("No se encontro ningun paciente con ese DNI.")
+
+        elif opcion == 4:
+            dni = pedir_dni("Ingrese el DNI del paciente: ")
+            mostrar_registro_clinico(dnis, nombres, diagnosticos, alergias, observaciones, evoluciones, dni)
+
+
+def menu_camas():
+    #Muestra el menu de gestion de camas
+    opcion = -1
+
+    while opcion != 0:
+        print("\\n--- GESTION DE CAMAS ---")
+        print("1 - Ver camas")
+        print("2 - Asignar cama a paciente internado")
+        print("3 - Liberar cama")
+        print("0 - Volver al menu de pacientes")
+        opcion = pedir_opcion("Opcion: ", 0, 3)
+
+        if opcion == 1:
+            mostrar_camas()
+        elif opcion == 2:
+            asignar_cama()
+        elif opcion == 3:
+            liberar_cama()
+
+
 def menu_pacientes():
     #Muestra el menu de gestion de pacientes
     subopcion = -1
 
     while subopcion != 0:
-        print("\n--- GESTION DE PACIENTES ---")
+        print("\\n--- GESTION DE PACIENTES ---")
         print("1 - Registrar paciente")
         print("2 - Buscar paciente")
         print("3 - Mostrar todos los pacientes")
@@ -417,10 +760,11 @@ def menu_pacientes():
         print("5 - Dar alta")
         print("6 - Mostrar pacientes internados")
         print("7 - Internar paciente")
-        print("8 - Ver estado de camas")
+        print("8 - Gestion de camas")
+        print("9 - Registro clinico")
         print("0 - Volver al menu principal")
 
-        subopcion = pedir_opcion("Opcion: ", 0, 8)
+        subopcion = pedir_opcion("Opcion: ", 0, 9)
 
         if subopcion == 1:
             dni = pedir_dni("Ingrese el DNI del paciente: ")
@@ -431,6 +775,9 @@ def menu_pacientes():
 
             if registrar_paciente(dnis, nombres, edades, diagnosticos, estados,
                                   dni, nombre, edad, diagnostico, estado):
+                alergias.append("Ninguna")
+                observaciones.append("Sin observaciones")
+                evoluciones.append("Sin evolucion")
                 print("Paciente registrado exitosamente.")
             else:
                 print("Ya existe un paciente con ese DNI.")
@@ -479,26 +826,11 @@ def menu_pacientes():
         elif subopcion == 8:
             menu_camas()
 
+        elif subopcion == 9:
+            menu_registro_clinico()
+
         elif subopcion == 0:
             print("Volviendo al menu principal...")
-
-def menu_camas():
-    opcion = -1
-
-    while opcion != 0:
-        print("\n--- GESTION DE CAMAS ---")
-        print("1 -- Ver camas --")
-        print("2 -- Asignar cama a paciente internado --")
-        print("3 -- Liberar cama --")
-        print("0 -- Volver al menu principal --")
-        opcion = pedir_opcion("Opcion: ", 0, 3)
-
-        if opcion == 1:
-            mostrar_camas()
-        elif opcion == 2:
-            asignar_cama()
-        elif opcion == 3:
-            liberar_cama()
 
 
 def main():
@@ -506,7 +838,7 @@ def main():
     opcion = -1
 
     while opcion != 0:
-        print("\n--- MENU PRINCIPAL ---")
+        print("\\n--- MENU PRINCIPAL ---")
         print("[1] Ver turnos")
         print("[2] Reserva de turnos")
         print("[3] Modificar turnos")
@@ -517,7 +849,7 @@ def main():
         opcion = pedir_opcion("Opcion: ", 0, 5)
 
         if opcion == 1:
-            print("\n--- TURNOS ---")
+            print("\\n--- TURNOS ---")
             mostrar_turnos()
 
         elif opcion == 2:
@@ -534,6 +866,7 @@ def main():
 
         elif opcion == 0:
             print("Saliendo del sistema...")
+
 
 if __name__ == "__main__":
     main()
