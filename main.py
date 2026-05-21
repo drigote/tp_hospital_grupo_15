@@ -7,6 +7,29 @@ ESTADOS_PACIENTE_VALIDOS = ("Ambulatorio", "Internado", "Alta medica")
 ESTADOS_CAMA_VALIDOS = ("Libre", "Ocupada", "Mantenimiento")
 SECTORES_VALIDOS = ("Guardia", "Clinica medica", "UTI", "Pediatria")
 
+#-----------------------DATOS-----------------------
+pacientes = {}
+ 
+turnos = {
+    "08:00": "Libre",
+    "09:00": "Libre",
+    "10:00": "Libre",
+    "11:00": "Libre",
+    "12:00": "Libre"
+}
+ 
+camas = {
+    1: "Libre",
+    2: "Libre",
+    3: "Libre",
+    4: "Libre",
+    5: "Libre"
+}
+ 
+horarios = list(turnos.keys())
+
+#------------------FUNCIONES------------------
+
 
 def contar_lista(lista):
     #Cuenta la cantidad de elementos de una lista
@@ -16,80 +39,66 @@ def contar_lista(lista):
     return contador
 
 
-def buscar_paciente(dnis, dni_buscado):
+def buscar_paciente(dni_buscado):
     #Busca un paciente por DNI y devuelve su indice o -1 si no existe
     dni_buscado = dni_buscado.strip()
-
-    i = 0
-    while i < len(dnis) and dnis[i] != dni_buscado:
-        i = i + 1
-
-    if i < len(dnis):
-        return i
-    else:
-        return -1
+    for dni in pacientes:
+        if dni == dni_buscado:
+            return dni
+    return -1
 
 
-def registrar_paciente(dnis, nombres, edades, diagnosticos, estados,
-                       dni, nombre, edad, diagnostico, estado_inicial="Ambulatorio"):
+def registrar_paciente(dni, nombre, edad, diagnostico, estado_inicial="Ambulatorio"):
     #Registra un paciente nuevo si el DNI no existe
-    if buscar_paciente(dnis, dni) != -1:
+    if dni in pacientes:
         return False
 
-    dnis.append(normalizar_texto(dni))
-    nombres.append(normalizar_nombre(nombre))
-    edades.append(edad)
-    diagnosticos.append(normalizar_texto(diagnostico))
-    estados.append(estado_inicial)
-
+    pacientes[dni] = {
+        "nombre": normalizar_nombre(nombre),
+        "edad": edad,
+        "diagnostico": normalizar_texto(diagnostico),
+        "estado": estado_inicial,
+        "alergias": "Ninguna",
+        "observaciones": "Sin observaciones",
+        "evolucion": "Sin evolucion"
+    }
     return True
 
 
-def mostrar_paciente(dnis, nombres, edades, diagnosticos, estados, dni_buscado):
+def mostrar_paciente(dni_buscado):
     #Muestra por pantalla los datos de un paciente buscado por DNI
-    indice = buscar_paciente(dnis, dni_buscado)
-
-    if indice == -1:
-        print("No se encontro ningun paciente con ese DNI.")
+    if dni_buscado not in pacientes:
+        print("No se encontro ningun paciente.")
     else:
+        p = pacientes[dni_buscado]
+
         print("----- DATOS DEL PACIENTE -----")
-        print("DNI:", dnis[indice])
-        print("Nombre:", nombres[indice])
-        print("Edad:", edades[indice])
-        print("Diagnostico:", diagnosticos[indice])
-        print("Estado:", estados[indice])
+        print("DNI:", dni_buscado)
+        print("Nombre:", p["nombre"])
+        print("Edad:", p["edad"])
+        print("Diagnostico:", p["diagnostico"])
+        print("Estado:", p["estado"])
         print("------------------------------")
 
 
-def obtener_resumenes_pacientes(dnis, nombres, estados):
-    #Se usa para mostrar todos los pacientes de una forma mas ordenada
-    return list(map(lambda i: f"DNI: {dnis[i]} - Nombre: {nombres[i]} - Estado: {estados[i]}", range(len(dnis))))
-
-
-def mostrar_todos_los_pacientes(dnis, nombres, estados):
+def mostrar_todos_los_pacientes():
     #Muestra todos los pacientes registrados
-    total = contar_lista(dnis)
-
-    if total == 0:
+    if not pacientes:
         print("No hay pacientes cargados.")
     else:
         print("----- LISTA DE PACIENTES -----")
-        resumenes = obtener_resumenes_pacientes(dnis, nombres, estados)
+        resumenes = list(map(lambda dni: f"DNI: {dni} - Nombre: {pacientes[dni]['nombre']} - Estado: {pacientes[dni]['estado']}", pacientes))
         for resumen in resumenes:
             print(resumen)
         print("------------------------------")
 
 
-def actualizar_diagnostico(dnis, diagnosticos, dni_buscado, nuevo_diagnostico):
+def actualizar_diagnostico(dni_buscado, nuevo_diagnostico):
     #Actualiza el diagnostico de un paciente
-    indice = buscar_paciente(dnis, dni_buscado)
-
-    if indice == -1:
+    if dni_buscado not in pacientes:
         return False
-    else:
-        diagnosticos[indice] = normalizar_texto(nuevo_diagnostico)
-        return True
-
+    pacientes[dni_buscado]["diagnostico"] = normalizar_texto(nuevo_diagnostico)
+    return True
 
 def cambiar_estado(dnis, estados, dni_buscado, nuevo_estado):
     #Cambia el estado general de un paciente
@@ -102,125 +111,98 @@ def cambiar_estado(dnis, estados, dni_buscado, nuevo_estado):
         return True
 
 
-def internar_paciente(dnis, estados, dni_buscado):
+def internar_paciente(dni_buscado):
     #Pasa el estado del paciente a Internado
-    indice = buscar_paciente(dnis, dni_buscado)
-
-    if indice == -1:
+    if dni_buscado not in pacientes:
         return -1
-    elif estados[indice] == "Internado":
+    elif pacientes[dni_buscado]["estado"] == "Internado":
         return 0
     else:
-        estados[indice] = "Internado"
+        pacientes[dni_buscado]["estado"] = "Internado"
+        return 1
+
+def dar_alta(dni_buscado):
+    #Pasa el estado del paciente a Alta medica y libera la cama si tiene una
+    if dni_buscado not in pacientes:
+        return -1
+    elif pacientes[dni_buscado]["estado"] == "Alta medica":
+            return 0
+    else:
+        pacientes[dni_buscado]["estado"] = "Alta medica"
+
+        for nro_camas, ocupante in camas.items():
+            if ocupante == dni_buscado:
+                camas[nro_camas] = "Libre"
+                break
+
         return 1
 
 
-def dar_alta(dnis, estados, dni_buscado):
-    #Pasa el estado del paciente a Alta medica y libera la cama si tiene una
-    indice = buscar_paciente(dnis, dni_buscado)
 
-    if indice == -1:
-        return -1
-    else:
-        if estados[indice] == "Alta medica":
-            return 0
-        else:
-            estados[indice] = "Alta medica"
-
-            for i in range(len(camas)):
-                if camas[i] == dni_buscado:
-                    camas[i] = "Libre"
-
-            return 1
-
-
-def esta_internado(dnis, estados, dni_buscado):
-    #Devuelve True si el paciente esta internado
-    indice = buscar_paciente(dnis, dni_buscado)
-
-    if indice == -1:
-        return False
-    else:
-        return estados[indice] == "Internado"
-
-
-def obtener_indices_internados(estados):
-    #Devuelve los indices de pacientes internados usando filter() y lambda
-    return list(filter(lambda i: estados[i] == "Internado", range(len(estados))))
-
-
-def mostrar_pacientes_internados(dnis, nombres, estados):
+def mostrar_pacientes_internados():
     #Muestra unicamente los pacientes que estan en estado de Internado
-    indices_internados = obtener_indices_internados(estados)
+    internados = list(filter(lambda p: p["estado"] == "Internado", pacientes.values()))
 
-    if len(indices_internados) == 0:
+    if not internados:
         print("No hay pacientes internados.")
     else:
         print("----- PACIENTES INTERNADOS -----")
-        for i in indices_internados:
-            print(f"DNI: {dnis[i]} - Nombre: {nombres[i]} - Estado: {estados[i]}")
+        internados = [(dni, paciente) for dni, paciente in pacientes.items() if paciente["estado"] == "Internado"]
+        for dni,paciente in internados:
+            print(f"DNI: {dni} - Nombre: {paciente['nombre']} - Estado: {paciente['estado']}")
         print("--------------------------------")
 
+#------------------REGISTRO CLINICO------------------
 
-def actualizar_alergias(dnis, alergias, dni_buscado, nuevas_alergias):
+def actualizar_alergias(dni_buscado, nuevas_alergias):
     #Actualiza las alergias de un paciente
-    indice = buscar_paciente(dnis, dni_buscado)
-
-    if indice == -1:
+    if dni_buscado not in pacientes:
         return False
-    else:
-        alergias[indice] = normalizar_texto(nuevas_alergias)
-        return True
+    pacientes[dni_buscado]["alergias"] = normalizar_texto(nuevas_alergias)
+    return True
 
-
-def agregar_observacion(dnis, observaciones, dni_buscado, nueva_observacion):
+def agregar_observacion(dni_buscado, nueva_observacion):
     #Agrega una observacion al registro del paciente
-    indice = buscar_paciente(dnis, dni_buscado)
-
-    if indice == -1:
+    if dni_buscado not in pacientes:
         return False
+
+    texto_nuevo = normalizar_texto(nueva_observacion)
+    actual = pacientes[dni_buscado]["observaciones"]
+
+    if actual == "" or actual == "Sin observaciones":
+        pacientes[dni_buscado]["observaciones"] = texto_nuevo
     else:
-        texto_nuevo = normalizar_texto(nueva_observacion)
-
-        if observaciones[indice] == "" or observaciones[indice] == "Sin observaciones":
-            observaciones[indice] = texto_nuevo
-        else:
-            observaciones[indice] = observaciones[indice] + " | " + texto_nuevo
-
-        return True
+        pacientes[dni_buscado]["observaciones"] = actual + " | " + texto_nuevo
+    return True
 
 
-def agregar_evolucion(dnis, evoluciones, dni_buscado, nueva_evolucion):
+def agregar_evolucion(dni_buscado, nueva_evolucion):
     #Agrega una evolucion al registro del paciente
-    indice = buscar_paciente(dnis, dni_buscado)
-
-    if indice == -1:
+    if dni_buscado not in pacientes:
         return False
+
+    texto_nuevo = normalizar_texto(nueva_evolucion)
+    actual = pacientes[dni_buscado]["evolucion"]
+
+    if actual == "" or actual == "Sin evolucion":
+        pacientes[dni_buscado]["evolucion"] = texto_nuevo
     else:
-        texto_nuevo = normalizar_texto(nueva_evolucion)
+        pacientes[dni_buscado]["evolucion"] = actual + " | " + texto_nuevo
+    return True
 
-        if evoluciones[indice] == "" or evoluciones[indice] == "Sin evolucion":
-            evoluciones[indice] = texto_nuevo
-        else:
-            evoluciones[indice] = evoluciones[indice] + " | " + texto_nuevo
-
-        return True
-
-
-def mostrar_registro_clinico(dnis, nombres, diagnosticos, alergias, observaciones, evoluciones, dni_buscado):
+def mostrar_registro_clinico(dni_buscado):
     #Muestra el registro clinico ampliado de un paciente
-    indice = buscar_paciente(dnis, dni_buscado)
-
-    if indice == -1:
+    if dni_buscado not in pacientes:
         print("No se encontro ningun paciente con ese DNI.")
     else:
         print("----- REGISTRO CLINICO -----")
-        print("DNI:", dnis[indice])
-        print("Nombre:", nombres[indice])
-        print("Diagnostico:", diagnosticos[indice])
-        print("Alergias:", alergias[indice])
-        print("Observaciones:", observaciones[indice])
-        print("Evolucion:", evoluciones[indice])
+        p = pacientes[dni_buscado]
+        print("DNI:", dni_buscado)
+        print("Nombre:", p["nombre"])
+        print("Diagnostico:", p["diagnostico"])
+        print("Alergias:", p["alergias"])
+        print("Observaciones:", p["observaciones"])
+        print("Evolucion:", p["evolucion"])
         print("----------------------------")
 
 
@@ -456,6 +438,7 @@ def pedir_estado_inicial():
     else:
         return "Internado"
 
+#------------------GESTION DE CAMAS------------------
 
 def validar_numero_cama(numero_cama_texto):
     #Valida que el numero de cama sea mayor a 0
@@ -543,31 +526,30 @@ def pedir_sector():
 def mostrar_camas():
     #Muestra el estado de las camas
     print("--- ESTADO DE LAS CAMAS ---")
-    for i in range(len(camas)):
-        print(f"Cama {numeros_camas[i]} -> {camas[i]}")
+    for nro, ocupante in camas.items():
+        print(f"Cama {nro} -> {ocupante}")
 
 
 def asignar_cama():
     #Asigna una cama a un paciente internado
     dni = pedir_dni("Ingrese el DNI del paciente a asignar cama: ")
-    indice_paciente = buscar_paciente(dnis, dni)
 
-    if indice_paciente == -1:
+    if dni not in pacientes:
         print("No se encontro ningun paciente con ese DNI.")
         return
-    elif estados[indice_paciente] != "Internado":
+    elif pacientes[dni]["estado"] != "Internado":
         print("El paciente no esta internado, no se le puede asignar una cama.")
         return
 
-    for i in range(len(camas)):
-        if camas[i] == dni:
-            print(f"El paciente ya tiene asignada la cama {numeros_camas[i]}.")
+    for nro, ocupante in camas.items():
+        if ocupante == dni:
+            print(f"El paciente ya tiene asignada la cama {nro}.")
             return
 
-    for i in range(len(camas)):
-        if camas[i] == "Libre":
-            camas[i] = dni
-            print(f"Cama {numeros_camas[i]} asignada correctamente.")
+    for nro, ocupante in camas.items():
+        if ocupante == "Libre":
+            camas[nro] = dni
+            print(f"Cama {nro} asignada correctamente.")
             return
 
     print("No hay camas disponibles para asignar.")
@@ -577,35 +559,21 @@ def liberar_cama():
     #Libera una cama ocupada por un paciente
     dni = pedir_dni("Ingrese el DNI del paciente a liberar cama: ")
 
-    for i in range(len(camas)):
-        if camas[i] == dni:
-            camas[i] = "Libre"
-            print(f"Cama {numeros_camas[i]} liberada correctamente.")
+    for nro, ocupante in camas.items():
+        if ocupante == dni:
+            camas[nro] = "Libre"
+            print(f"Cama {nro} liberada correctamente.")
             return
 
     print("No se encontro ninguna cama asignada a ese paciente.")
 
-
-# ------------------ DATOS ------------------
-dnis = []
-nombres = []
-edades = []
-diagnosticos = []
-estados = []
-alergias = []
-observaciones = []
-evoluciones = []
-turnos = ["Libre", "Libre", "Libre", "Libre", "Libre"]
-horarios = ["08:00", "09:00", "10:00", "11:00", "12:00"]
-camas = ["Libre", "Libre", "Libre", "Libre", "Libre"]
-numeros_camas = [1, 2, 3, 4, 5]
-
+#------------------GESTION DE TURNOS------------------
 
 def mostrar_turnos():
     #Muestra todos los turnos con su estado
     print("--- ESTADO DE LOS TURNOS ---")
-    for i in range(len(horarios)):
-        print(horarios[i], "->", turnos[i])
+    for hora, estado in turnos.items():
+        print(hora, "->", estado)
 
 
 def asignar_turnos():
@@ -613,14 +581,11 @@ def asignar_turnos():
     hora = pedir_horario("Ingrese la hora del turno: ")
     nombre = pedir_nombre("Ingrese el nombre del paciente: ")
 
-    for i in range(len(horarios)):
-        if horarios[i] == hora:
-            if turnos[i] == "Libre":
-                turnos[i] = nombre
-                print("Turno asignado")
-            else:
-                print("Turno ocupado")
-            return
+    if turnos[hora] == "Libre":
+        turnos[hora] = nombre
+        print("Turno asignado correctamente.")
+    else:
+        print("El turno ya esta ocupado por", turnos[hora])
 
 
 def pedir_horario(mensaje):
@@ -639,46 +604,34 @@ def modificar_turno():
     #Modifica un turno existente por otro horario libre
     hora_actual = pedir_horario("Ingrese la hora del turno a modificar: ")
 
-    for i in range(len(horarios)):
-        if horarios[i] == hora_actual:
-            if turnos[i] == "Libre":
-                print("Ese turno esta libre, no hay nada para modificar.")
-                return
+    if turnos[hora_actual] == "Libre":
+        print("El turno esta libre, no se puede modificar.")
+        return
+    nombre_paciente = turnos[hora_actual]
+    print("Turno actual asignado a:", nombre_paciente)
 
-            nombre_paciente = turnos[i]
-            print("Turno actual asignado a:", nombre_paciente)
+    hora_nueva = pedir_horario("Ingrese la nueva hora del turno: ")
 
-            hora_nueva = pedir_horario("Ingrese la nueva hora del turno: ")
-
-            if hora_nueva == hora_actual:
-                print("Ingreso el mismo horario.")
-                return
-
-            j = 0
-            while j < len(horarios):
-                if horarios[j] == hora_nueva:
-                    if turnos[j] == "Libre":
-                        turnos[j] = nombre_paciente
-                        turnos[i] = "Libre"
-                        print("Turno modificado correctamente.")
-                    else:
-                        print("El nuevo horario ya esta ocupado.")
-                    return
-                j = j + 1
+    if hora_nueva == hora_actual:
+        print("Ingreso el mismo horario.")
+        return
+    elif turnos[hora_nueva] == "Libre":
+        turnos[hora_nueva] = nombre_paciente
+        turnos[hora_actual] = "Libre"
+        print("Turno modificado correctamente.")
+    else:
+        print("El nuevo horario ya esta ocupado.")
 
 
 def cancelar_turno():
     #Cancela un turno si el horario existe y esta ocupado
     hora = pedir_horario("Ingrese la hora del turno a cancelar: ")
 
-    for i in range(len(horarios)):
-        if horarios[i] == hora:
-            if turnos[i] != "Libre":
-                turnos[i] = "Libre"
-                print("Turno cancelado")
-            else:
-                print("El turno ya esta libre")
-            return
+    if turnos[hora] != "Libre":
+        turnos[hora] = "Libre"
+        print("Turno cancelado correctamente.")
+    else:
+        print("El turno ya esta libre, no se puede cancelar.")
 
 
 def menu_registro_clinico():
@@ -699,7 +652,7 @@ def menu_registro_clinico():
             dni = pedir_dni("Ingrese el DNI del paciente: ")
             nuevas_alergias = pedir_alergias("Ingrese las alergias del paciente: ")
 
-            if actualizar_alergias(dnis, alergias, dni, nuevas_alergias):
+            if actualizar_alergias(dni, nuevas_alergias):
                 print("Alergias actualizadas exitosamente.")
             else:
                 print("No se encontro ningun paciente con ese DNI.")
@@ -708,7 +661,7 @@ def menu_registro_clinico():
             dni = pedir_dni("Ingrese el DNI del paciente: ")
             nueva_observacion = pedir_observacion("Ingrese la observacion: ")
 
-            if agregar_observacion(dnis, observaciones, dni, nueva_observacion):
+            if agregar_observacion(dni, nueva_observacion):
                 print("Observacion agregada exitosamente.")
             else:
                 print("No se encontro ningun paciente con ese DNI.")
@@ -717,14 +670,14 @@ def menu_registro_clinico():
             dni = pedir_dni("Ingrese el DNI del paciente: ")
             nueva_evolucion = pedir_evolucion("Ingrese la evolucion: ")
 
-            if agregar_evolucion(dnis, evoluciones, dni, nueva_evolucion):
+            if agregar_evolucion(dni, nueva_evolucion):
                 print("Evolucion agregada exitosamente.")
             else:
                 print("No se encontro ningun paciente con ese DNI.")
 
         elif opcion == 4:
             dni = pedir_dni("Ingrese el DNI del paciente: ")
-            mostrar_registro_clinico(dnis, nombres, diagnosticos, alergias, observaciones, evoluciones, dni)
+            mostrar_registro_clinico(dni)
 
 
 def menu_camas():
@@ -773,34 +726,30 @@ def menu_pacientes():
             diagnostico = pedir_diagnostico("Ingrese el diagnostico del paciente: ")
             estado = pedir_estado_inicial()
 
-            if registrar_paciente(dnis, nombres, edades, diagnosticos, estados,
-                                  dni, nombre, edad, diagnostico, estado):
-                alergias.append("Ninguna")
-                observaciones.append("Sin observaciones")
-                evoluciones.append("Sin evolucion")
+            if registrar_paciente(dni, nombre, edad, diagnostico, estado):
                 print("Paciente registrado exitosamente.")
             else:
                 print("Ya existe un paciente con ese DNI.")
 
         elif subopcion == 2:
             dni = pedir_dni("Ingrese el DNI del paciente a buscar: ")
-            mostrar_paciente(dnis, nombres, edades, diagnosticos, estados, dni)
+            mostrar_paciente(dni)
 
         elif subopcion == 3:
-            mostrar_todos_los_pacientes(dnis, nombres, estados)
+            mostrar_todos_los_pacientes()
 
         elif subopcion == 4:
             dni = pedir_dni("Ingrese el DNI del paciente a actualizar: ")
             nuevo_diagnostico = pedir_diagnostico("Ingrese el nuevo diagnostico: ")
 
-            if actualizar_diagnostico(dnis, diagnosticos, dni, nuevo_diagnostico):
+            if actualizar_diagnostico(dni, nuevo_diagnostico):
                 print("Diagnostico actualizado exitosamente.")
             else:
                 print("No se encontro ningun paciente con ese DNI.")
 
         elif subopcion == 5:
             dni = pedir_dni("Ingrese el DNI del paciente a dar de alta: ")
-            resultado = dar_alta(dnis, estados, dni)
+            resultado = dar_alta(dni)
 
             if resultado == 1:
                 print("Paciente dado de alta exitosamente.")
@@ -810,11 +759,11 @@ def menu_pacientes():
                 print("No se encontro ningun paciente con ese DNI.")
 
         elif subopcion == 6:
-            mostrar_pacientes_internados(dnis, nombres, estados)
+            mostrar_pacientes_internados()
 
         elif subopcion == 7:
             dni = pedir_dni("Ingrese el DNI del paciente a internar: ")
-            resultado = internar_paciente(dnis, estados, dni)
+            resultado = internar_paciente(dni)
 
             if resultado == 1:
                 print("Paciente internado exitosamente.")
