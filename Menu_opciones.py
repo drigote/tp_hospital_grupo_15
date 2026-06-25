@@ -1,7 +1,8 @@
 # ==============================================================================
-# ------------------ DATOS DEL SISTEMA: TURNOS -----------------------
+# ------------------ DATOS DEL SISTEMA -----------------
 # ==============================================================================
 
+# --- MÓDULO TURNOS ---
 turnos_disponibles = [
     "Lunes 08:00", "Lunes 09:00", "Lunes 10:00", 
     "Martes 08:00", "Martes 09:00", "Martes 10:00", 
@@ -9,19 +10,19 @@ turnos_disponibles = [
     "Jueves 08:00", "Jueves 09:00", "Jueves 10:00", 
     "Viernes 08:00", "Viernes 09:00", "Viernes 10:00"
 ]
-# Lista paralela: almacena "Libre" o el nombre del paciente asignado
 turnos = ["Libre"] * len(turnos_disponibles)
+
+# --- MÓDULO CAMAS ---
+numeros_camas = [1, 2, 3, 4, 5]
+camas = ["Libre", "Libre", "Libre", "Libre", "Libre"]
 
 
 # ==============================================================================
-# ------------------ FUNCIONES DE CONVERSIÓN Y VALIDACIÓN ----------------------
+# ------------------ FUNCIONES DE CONVERSIÓN A DICCIONARIOS -------------------
 # ==============================================================================
 
 def convertir_turnos_diccionario(horas_disponibles, estados_turnos):
-    """
-    Convierte las listas paralelas en un diccionario estructurado (tipo _camas_diccionarios).
-    Mapea cada turno (Día y Hora) con su estado actual (Libre o Paciente).
-    """
+    """Convierte las listas paralelas de turnos en un diccionario (Día/Hora -> Estado)."""
     turnos_dict = {}
     i = 0
     while i < len(horas_disponibles):
@@ -30,105 +31,48 @@ def convertir_turnos_diccionario(horas_disponibles, estados_turnos):
     return turnos_dict
 
 
-def pedir_turno_disponible(mensaje):
-    """Valida que el turno ingresado exista textualmente en el cronograma semanal."""
-    turno = input(mensaje).strip()
-    
+def convertir_camas_diccionario(numeros, estados_camas):
+    """Convierte las listas paralelas de camas en un diccionario (Número -> Estado/DNI)."""
+    camas_dict = {}
     i = 0
-    while i < len(turnos_disponibles):
-        if turnos_disponibles[i].lower() == turno.lower():
-            return turnos_disponibles[i]  # Devuelve el formato idéntico de la lista
+    while i < len(numeros):
+        camas_dict[numeros[i]] = estados_camas[i]
         i = i + 1
-    
-    print("Error. El turno no existe en el cronograma. Ejemplo válido: 'Lunes 08:00'")
-    return pedir_turno_disponible(mensaje)
+    return camas_dict
 
 
 # ==============================================================================
-# ------------------ GESTIÓN DE TURNOS ------------
+# ------------------ NUEVAS FUNCIONES DE GESTIÓN DE CAMAS ---------------------
 # ==============================================================================
 
-def mostrar_turnos():
-    """Muestra el estado de todos los turnos semanales usando el diccionario."""
-    dict_actual = convertir_turnos_diccionario(turnos_disponibles, turnos)
+def mostrar_camas():
+    """Muestra el estado de las camas formateado desde su diccionario."""
+    dict_camas = convertir_camas_diccionario(numeros_camas, camas)
     
-    print("\n--- ESTADO DE LOS TURNOS SEMANALES ---")
-    hay_disponibles = False
-    
-    for turno, estado in dict_actual.items():
+    print("\n--- ESTADO DE LAS CAMAS ---")
+    for num_cama, estado in dict_camas.items():
         if estado == "Libre":
-            print(f"- {turno}: Libre")
-            hay_disponibles = True
+            print(f"Cama {num_cama} -> Libre")
         else:
-            print(f"- {turno}: Ocupado por {estado}")
-
-    if not hay_disponibles:
-        print("No hay turnos disponibles.")
+            print(f"Cama {num_cama} -> Ocupada por DNI: {estado}")
 
 
-def asignar_turno():
-    """Reserva un turno validando la disponibilidad mediante el diccionario."""
-    print("\n--- RESERVA DE TURNOS ---")
-    turno_elegido = pedir_turno_disponible("Ingrese el día y hora a agendar: ")
-    
-    # Verificamos la disponibilidad en el mapa del diccionario
-    dict_actual = convertir_turnos_diccionario(turnos_disponibles, turnos)
-    
-    if dict_actual[turno_elegido] == "Libre":
-        nombre_paciente = pedir_nombre("Ingrese el nombre del paciente: ")
-        
-        # Buscamos el índice correspondiente para impactar de forma persistente en la lista
-        i = 0
-        while i < len(turnos_disponibles):
-            if turnos_disponibles[i] == turno_elegido:
-                turnos[i] = nombre_paciente
-                print(f"Turno '{turno_elegido}' agendado para {nombre_paciente} exitosamente.")
-                break
-            i = i + 1
-    else:
-        print("El turno ya está ocupado por otro paciente.")
+def asignar_cama():
+    """Asigna una cama libre chequeando disponibilidad en el diccionario."""
+    dni = pedir_dni("Ingrese el DNI del paciente a asignar cama: ")
+    indice_paciente = buscar_paciente(dnis, dni)
 
-
-def modificar_turno():
-    """Modifica un turno activo por otro libre usando la estructura mapeada."""
-    print("\n--- MODIFICAR TURNO ---")
-    turno_actual = pedir_turno_disponible("Ingrese el turno a modificar: ")
-    dict_actual = convertir_turnos_diccionario(turnos_disponibles, turnos)
-    
-    if dict_actual[turno_actual] == "Libre":
-        print("Ese turno está libre, no hay ninguna reserva para modificar.")
+    if indice_paciente == -1:
+        print("No se encontro ningun paciente con ese DNI.")
         return
-        
-    nombre_paciente = dict_actual[turno_actual]
-    turno_nuevo = pedir_turno_disponible("Ingrese el nuevo turno deseado: ")
-    
-    # Validamos el estado del nuevo turno usando el diccionario
-    if dict_actual[turno_nuevo] == "Libre":
-        i = 0
-        while i < len(turnos_disponibles):
-            if turnos_disponibles[i] == turno_actual:
-                turnos[i] = "Libre"
-            if turnos_disponibles[i] == turno_nuevo:
-                turnos[i] = nombre_paciente
-            i = i + 1
-        print(f"Turno modificado correctamente de '{turno_actual}' a '{turno_nuevo}'.")
-    else:
-        print("El nuevo turno ya está ocupado.")
 
+    if estados[indice_paciente] != "Internado":
+        print("El paciente no esta internado, no se le puede asignar una cama.")
+        return
 
-def cancelar_turno():
-    """Cancela una reserva activa chequeando el diccionario."""
-    print("\n--- CANCELACIÓN DE TURNO ---")
-    turno_a_eliminar = pedir_turno_disponible("Ingrese el turno a cancelar: ")
-    dict_actual = convertir_turnos_diccionario(turnos_disponibles, turnos)
+    dict_camas = convertir_camas_diccionario(numeros_camas, camas)
     
-    if dict_actual[turno_a_eliminar] != "Libre":
-        i = 0
-        while i < len(turnos_disponibles):
-            if turnos_disponibles[i] == turno_a_eliminar:
-                turnos[i] = "Libre"
-                print(f"Turno '{turno_a_eliminar}' liberado exitosamente.")
-                break
-            i = i + 1
-    else:
-        print("El turno ya estaba libre.")
+    # Validar si ya tiene cama asignada
+    for num_cama, estado in dict_camas.items():
+        if estado == dni:
+            print(
