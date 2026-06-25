@@ -1,5 +1,24 @@
 import archivos_json as archivos
 
+def test_convertir_turnos_diccionario():
+    horas = ["Lunes 08:00", "Martes 09:00"]
+    estados = ["Libre", "Juan Perez"]
+    
+    resultado = archivos.convertir_turnos_diccionario(horas, estados)
+    
+    assert resultado["Lunes 08:00"] == "Libre"
+    assert resultado["Martes 09:00"] == "Juan Perez"
+
+
+def test_convertir_camas_diccionario():
+    numeros = [1, 2]
+    estados = ["Libre", "12345678"]
+    
+    resultado = archivos.convertir_camas_diccionario(numeros, estados)
+    
+    assert resultado[1] == "Libre"
+    assert resultado[2] == "12345678"
+
 
 def test_convertir_pacientes_a_diccionarios():
     pacientes = archivos.convertir_pacientes_a_diccionarios(
@@ -85,11 +104,11 @@ def test_guardar_y_cargar_pacientes_json(tmp_path):
 
 def test_cargar_pacientes_json_inexistente():
     resultado = archivos.cargar_pacientes_json("pacientes_inexistente.json")
-
     assert resultado == None
 
 
 def test_convertir_sistema_a_diccionario():
+    # CORREGIDO: Pasa tus parámetros de turnos semanales y camas
     sistema = archivos.convertir_sistema_a_diccionario(
         ["12345678"],
         ["Juan Perez"],
@@ -99,19 +118,17 @@ def test_convertir_sistema_a_diccionario():
         ["Ninguna"],
         ["Sin observaciones"],
         ["Sin evolucion"],
-        ["Libre"],
-        ["08:00"],
-        ["Libre"],
-        [1]
+        ["Lunes 08:00"],  # turnos_disponibles
+        ["Libre"],         # turnos
+        ["Libre"],         # camas
+        [1]                # numeros_camas
     )
 
     assert "pacientes" in sistema
-    assert "turnos" in sistema
-    assert "horarios" in sistema
-    assert "camas" in sistema
-    assert "numeros_camas" in sistema
+    assert "turnos_semanales" in sistema  # Clave nueva corregida
+    assert "camas_hospital" in sistema    # Clave nueva corregida
     assert sistema["pacientes"][0]["dni"] == "12345678"
-    assert sistema["horarios"] == ["08:00"]
+    assert sistema["turnos_semanales"]["Lunes 08:00"] == "Libre"
 
 
 def test_guardar_y_cargar_sistema_json(tmp_path):
@@ -127,30 +144,29 @@ def test_guardar_y_cargar_sistema_json(tmp_path):
         ["Ninguna"],
         ["Sin observaciones"],
         ["Sin evolucion"],
-        ["Libre"],
-        ["08:00"],
-        ["Libre"],
-        [1]
+        ["Lunes 08:00"],  # turnos_disponibles
+        ["Libre"],         # turnos
+        ["Libre"],         # camas
+        [1]                # numeros_camas
     )
 
     resultado_cargado = archivos.cargar_sistema_json(archivo)
 
     datos_pacientes = resultado_cargado[0]
-    turnos = resultado_cargado[1]
-    horarios = resultado_cargado[2]
+    turnos_disponibles = resultado_cargado[1]
+    turnos = resultado_cargado[2]
     camas = resultado_cargado[3]
     numeros_camas = resultado_cargado[4]
 
     assert resultado_guardado == True
     assert datos_pacientes[0] == ["12345678"]
     assert datos_pacientes[1] == ["Juan Perez"]
+    assert turnos_disponibles == ["Lunes 08:00"]
     assert turnos == ["Libre"]
-    assert horarios == ["08:00"]
     assert camas == ["Libre"]
     assert numeros_camas == [1]
 
 
 def test_cargar_sistema_json_inexistente():
     resultado = archivos.cargar_sistema_json("sistema_inexistente.json")
-
     assert resultado == None
