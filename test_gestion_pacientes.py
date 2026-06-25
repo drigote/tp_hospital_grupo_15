@@ -183,3 +183,11 @@ def test_agregar_evolucion_acumulada():
 
     assert resultado == True
     assert evoluciones[0] == "Mejora clinica | Continua estable"
+
+def test_contar_pacientes_por_estado_recursivo():
+    estados = ["Internado", "Alta medica", "Internado", "Ambulatorio"]
+
+    assert gp.contar_pacientes_por_estado_recursivo(estados, "Internado") == 2
+    assert gp.contar_pacientes_por_estado_recursivo(estados, "Alta medica") == 1
+    assert gp.contar_pacientes_por_estado_recursivo(estados, "Ambulatorio") == 1
+    assert gp.contar_pacientes_por_estado_recursivo(estados, "Derivado") == 0

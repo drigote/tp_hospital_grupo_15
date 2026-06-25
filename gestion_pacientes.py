@@ -194,7 +194,16 @@ def agregar_evolucion(dnis, evoluciones, dni_buscado, nueva_evolucion):
             evoluciones[indice] = evoluciones[indice] + " | " + texto_nuevo
 
         return True
-
+    
+def contar_pacientes_por_estado_recursivo(estados, estado_buscado, indice=0):
+    #Cuenta pacientes por estado usando recursividad
+    if indice == len(estados):
+        return 0
+    else:
+        if estados[indice] == estado_buscado:
+            return 1 + contar_pacientes_por_estado_recursivo(estados, estado_buscado, indice + 1)
+        else:
+            return contar_pacientes_por_estado_recursivo(estados, estado_buscado, indice + 1)
 
 def mostrar_registro_clinico(dnis, nombres, diagnosticos, alergias, observaciones, evoluciones, dni_buscado):
     #Muestra el registro clinico ampliado de un paciente
