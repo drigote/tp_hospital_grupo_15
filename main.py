@@ -112,13 +112,13 @@ def pedir_nombre(mensaje):
 
 
 def validar_edad(edad_texto):
-    #Valida que la edad sea un numero entre 0 y 120
+    #Valida que la edad sea un numero entre 0 y 100
     edad_texto = edad_texto.strip()
 
     try:
         edad = int(edad_texto)
 
-        if edad >= 0 and edad <= 120:
+        if edad >= 0 and edad <= 100:
             return True
         else:
             return False
@@ -131,7 +131,7 @@ def pedir_edad(mensaje):
     edad_texto = input(mensaje).strip()
 
     while not validar_edad(edad_texto):
-        print("Error. Ingrese una edad valida entre 0 y 120.")
+        print("Error. Ingrese una edad valida entre 0 y 100.")
         edad_texto = input(mensaje).strip()
 
     return int(edad_texto)
