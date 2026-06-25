@@ -1,10 +1,26 @@
 import json
 
+def convertir_turnos_diccionario(horas_disponibles, estados_turnos):
+    """Convierte las listas paralelas de turnos en un diccionario (Día/Hora -> Estado)."""
+    turnos_dict = {}
+    i = 0
+    while i < len(horas_disponibles):
+        turnos_dict[horas_disponibles[i]] = estados_turnos[i]
+        i = i + 1
+    return turnos_dict
+
+
+def convertir_camas_diccionario(numeros, estados_camas):
+    """Convierte las listas paralelas de camas en un diccionario (Número -> Estado/DNI)."""
+    camas_dict = {}
+    i = 0
+    while i < len(numeros):
+        camas_dict[numeros[i]] = estados_camas[i]
+        i = i + 1
+    return camas_dict
 
 def convertir_pacientes_a_diccionarios(dnis, nombres, edades, diagnosticos, estados, alergias, observaciones, evoluciones):
-    #Convierte las listas paralelas de pacientes en una lista de diccionarios
     pacientes = []
-
     for i in range(len(dnis)):
         paciente = {
             "dni": dnis[i],
@@ -16,14 +32,11 @@ def convertir_pacientes_a_diccionarios(dnis, nombres, edades, diagnosticos, esta
             "observaciones": observaciones[i],
             "evolucion": evoluciones[i]
         }
-
         pacientes.append(paciente)
-
     return pacientes
 
 
 def convertir_diccionarios_a_listas(pacientes):
-    #Convierte una lista de diccionarios en listas paralelas
     dnis = []
     nombres = []
     edades = []
@@ -47,111 +60,68 @@ def convertir_diccionarios_a_listas(pacientes):
 
 
 def guardar_pacientes_json(nombre_archivo, dnis, nombres, edades, diagnosticos, estados, alergias, observaciones, evoluciones):
-    #Guarda los pacientes en un archivo json
     try:
         pacientes = convertir_pacientes_a_diccionarios(
-            dnis,
-            nombres,
-            edades,
-            diagnosticos,
-            estados,
-            alergias,
-            observaciones,
-            evoluciones
+            dnis, nombres, edades, diagnosticos, estados, alergias, observaciones, evoluciones
         )
-
         with open(nombre_archivo, "w", encoding="utf-8") as archivo:
             json.dump(pacientes, archivo, indent=4, ensure_ascii=False)
-
         return True
     except OSError:
         return False
 
 
 def cargar_pacientes_json(nombre_archivo):
-    #Carga los pacientes desde un archivo json
     try:
         with open(nombre_archivo, "r", encoding="utf-8") as archivo:
             pacientes = json.load(archivo)
-
         return convertir_diccionarios_a_listas(pacientes)
-    except OSError:
-        return None
-    except json.JSONDecodeError:
-        return None
-    except KeyError:
+    except (OSError, json.JSONDecodeError, KeyError):
         return None
 
 
 def convertir_sistema_a_diccionario(dnis, nombres, edades, diagnosticos, estados,
                                     alergias, observaciones, evoluciones,
-                                    turnos, horarios, camas, numeros_camas):
-    #Convierte los datos principales del sistema en un diccionario
+                                    turnos_disponibles, turnos, camas, numeros_camas):
     sistema = {
         "pacientes": convertir_pacientes_a_diccionarios(
-            dnis,
-            nombres,
-            edades,
-            diagnosticos,
-            estados,
-            alergias,
-            observaciones,
-            evoluciones
+            dnis, nombres, edades, diagnosticos, estados,
+            alergias, observaciones, evoluciones
         ),
-        "turnos": turnos,
-        "horarios": horarios,
-        "camas": camas,
-        "numeros_camas": numeros_camas
+        "turnos_semanales": convertir_turnos_diccionario(turnos_disponibles, turnos),
+        "camas_hospital": convertir_camas_diccionario(numeros_camas, camas)
     }
-
     return sistema
 
 
 def guardar_sistema_json(nombre_archivo, dnis, nombres, edades, diagnosticos, estados,
                          alergias, observaciones, evoluciones,
-                         turnos, horarios, camas, numeros_camas):
-    #Guarda los datos principales del sistema en un archivo json
+                         turnos_disponibles, turnos, camas, numeros_camas):
     try:
         sistema = convertir_sistema_a_diccionario(
-            dnis,
-            nombres,
-            edades,
-            diagnosticos,
-            estados,
-            alergias,
-            observaciones,
-            evoluciones,
-            turnos,
-            horarios,
-            camas,
-            numeros_camas
+            dnis, nombres, edades, diagnosticos, estados,
+            alergias, observaciones, evoluciones,
+            turnos_disponibles, turnos, camas, numeros_camas
         )
-
         with open(nombre_archivo, "w", encoding="utf-8") as archivo:
             json.dump(sistema, archivo, indent=4, ensure_ascii=False)
-
         return True
     except OSError:
         return False
 
 
 def cargar_sistema_json(nombre_archivo):
-    #Carga los datos principales del sistema desde un archivo json
     try:
         with open(nombre_archivo, "r", encoding="utf-8") as archivo:
             sistema = json.load(archivo)
 
         datos_pacientes = convertir_diccionarios_a_listas(sistema["pacientes"])
 
-        turnos = sistema["turnos"]
-        horarios = sistema["horarios"]
-        camas = sistema["camas"]
-        numeros_camas = sistema["numeros_camas"]
+    
+        dict_turnos = sistema["turnos_semanales"]
+        turnos_disponibles = list(dict_turnos.keys())
+        turnos = list(dict_turnos.values())
 
-        return datos_pacientes, turnos, horarios, camas, numeros_camas
-    except OSError:
-        return None
-    except json.JSONDecodeError:
-        return None
-    except KeyError:
-        return None
+      
+        dict_camas = sistema["camas_hospital"]
+        numeros_camas = list(map(int, dict_camas.keys()))
