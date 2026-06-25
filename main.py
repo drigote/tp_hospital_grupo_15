@@ -9,8 +9,7 @@ normalizar_texto = lambda texto: texto.strip()
 
 # ------------------ CONSTANTES DE VALIDACION ------------------
 ESTADOS_PACIENTE_VALIDOS = ("Ambulatorio", "Internado", "Alta medica")
-ESTADOS_CAMA_VALIDOS = ("Libre", "Ocupada", "Mantenimiento")
-SECTORES_VALIDOS = ("Guardia", "Clinica medica", "UTI", "Pediatria")
+ESTADOS_CAMA_VALIDOS = ("Libre", "Ocupada")
 
 
 # ------------------ DATOS DEL SISTEMA ------------------
@@ -119,7 +118,7 @@ def validar_edad(edad_texto):
     try:
         edad = int(edad_texto)
 
-        if edad >= 0 and edad <= 100:
+        if edad >= 0 and edad <= 120:
             return True
         else:
             return False
@@ -132,7 +131,7 @@ def pedir_edad(mensaje):
     edad_texto = input(mensaje).strip()
 
     while not validar_edad(edad_texto):
-        print("Error. Ingrese una edad valida entre 0 y 100.")
+        print("Error. Ingrese una edad valida entre 0 y 120.")
         edad_texto = input(mensaje).strip()
 
     return int(edad_texto)
@@ -313,46 +312,13 @@ def pedir_estado_cama():
     print("Seleccione el estado de la cama:")
     print("1 - Libre")
     print("2 - Ocupada")
-    print("3 - Mantenimiento")
 
-    opcion = pedir_opcion("Opcion: ", 1, 3)
+    opcion = pedir_opcion("Opcion: ", 1, 2)
 
     if opcion == 1:
         return "Libre"
-    elif opcion == 2:
+    else:
         return "Ocupada"
-    else:
-        return "Mantenimiento"
-
-
-def validar_sector(sector):
-    #Valida que el sector este dentro de los permitidos
-    sector = sector.strip().lower()
-
-    if sector == "guardia" or sector == "clinica medica" or sector == "uti" or sector == "pediatria":
-        return True
-    else:
-        return False
-
-
-def pedir_sector():
-    #Permite elegir el sector de una cama
-    print("Seleccione el sector:")
-    print("1 - Guardia")
-    print("2 - Clinica medica")
-    print("3 - UTI")
-    print("4 - Pediatria")
-
-    opcion = pedir_opcion("Opcion: ", 1, 4)
-
-    if opcion == 1:
-        return "Guardia"
-    elif opcion == 2:
-        return "Clinica medica"
-    elif opcion == 3:
-        return "UTI"
-    else:
-        return "Pediatria"
 
 
 # ------------------ GESTION DE PACIENTES ------------------
@@ -552,6 +518,30 @@ def agregar_evolucion(dnis, evoluciones, dni_buscado, nueva_evolucion):
             evoluciones[indice] = evoluciones[indice] + " | " + texto_nuevo
 
         return True
+
+
+def contar_pacientes_por_estado_recursivo(estados, estado_buscado, indice=0):
+    #Cuenta pacientes por estado usando recursividad
+    if indice == len(estados):
+        return 0
+    else:
+        if estados[indice] == estado_buscado:
+            return 1 + contar_pacientes_por_estado_recursivo(estados, estado_buscado, indice + 1)
+        else:
+            return contar_pacientes_por_estado_recursivo(estados, estado_buscado, indice + 1)
+
+
+def mostrar_resumen_pacientes_recursivo():
+    #Muestra un resumen de pacientes por estado usando recursividad
+    total_ambulatorios = contar_pacientes_por_estado_recursivo(estados, "Ambulatorio")
+    total_internados = contar_pacientes_por_estado_recursivo(estados, "Internado")
+    total_altas = contar_pacientes_por_estado_recursivo(estados, "Alta medica")
+
+    print("----- RESUMEN DE PACIENTES -----")
+    print("Ambulatorios:", total_ambulatorios)
+    print("Internados:", total_internados)
+    print("Alta medica:", total_altas)
+    print("--------------------------------")
 
 
 def mostrar_registro_clinico(dnis, nombres, diagnosticos, alergias, observaciones, evoluciones, dni_buscado):
@@ -798,9 +788,10 @@ def menu_pacientes():
         print("7 - Internar paciente")
         print("8 - Gestion de camas")
         print("9 - Registro clinico")
+        print("10 - Resumen de pacientes por estado")
         print("0 - Volver al menu principal")
 
-        opcion = pedir_opcion("Opcion: ", 0, 9)
+        opcion = pedir_opcion("Opcion: ", 0, 10)
 
         if opcion == 1:
             dni = pedir_dni("Ingrese el DNI del paciente: ")
@@ -865,6 +856,9 @@ def menu_pacientes():
 
         elif opcion == 9:
             menu_registro_clinico()
+
+        elif opcion == 10:
+            mostrar_resumen_pacientes_recursivo()
 
         elif opcion == 0:
             print("Volviendo al menu principal...")

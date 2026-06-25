@@ -1,0 +1,31 @@
+{
+    "pacientes": [],
+    "turnos": [
+        "Libre",
+        "Libre",
+        "Libre",
+        "Libre",
+        "Libre"
+    ],
+    "horarios": [
+        "08:00",
+        "09:00",
+        "10:00",
+        "11:00",
+        "12:00"
+    ],
+    "camas": [
+        "Libre",
+        "Libre",
+        "Libre",
+        "Libre",
+        "Libre"
+    ],
+    "numeros_camas": [
+        1,
+        2,
+        3,
+        4,
+        5
+    ]
+}

@@ -1,8 +1,7 @@
 import re
 
 ESTADOS_PACIENTE_VALIDOS = ("Ambulatorio", "Internado", "Alta medica")
-ESTADOS_CAMA_VALIDOS = ("Libre", "Ocupada", "Mantenimiento")
-SECTORES_VALIDOS = ("Guardia", "Clinica medica", "UTI", "Pediatria")
+ESTADOS_CAMA_VALIDOS = ("Libre", "Ocupada")
 
 
 def validar_texto_no_vacio(texto):
@@ -223,6 +222,7 @@ def validar_estado_paciente(estado):
     else:
         return False
 
+
 def pedir_estado_inicial():
     #Permite elegir el estado inicial del paciente
     print("Seleccione el estado inicial del paciente:")
@@ -278,43 +278,10 @@ def pedir_estado_cama():
     print("Seleccione el estado de la cama:")
     print("1 - Libre")
     print("2 - Ocupada")
-    print("3 - Mantenimiento")
 
-    opcion = pedir_opcion("Opcion: ", 1, 3)
+    opcion = pedir_opcion("Opcion: ", 1, 2)
 
     if opcion == 1:
         return "Libre"
-    elif opcion == 2:
+    else:
         return "Ocupada"
-    else:
-        return "Mantenimiento"
-
-
-def validar_sector(sector):
-    #Valida que el sector este dentro de los permitidos
-    sector = sector.strip().lower()
-
-    if sector == "guardia" or sector == "clinica medica" or sector == "uti" or sector == "pediatria":
-        return True
-    else:
-        return False
-
-
-def pedir_sector():
-    #Permite elegir el sector de una cama
-    print("Seleccione el sector:")
-    print("1 - Guardia")
-    print("2 - Clinica medica")
-    print("3 - UTI")
-    print("4 - Pediatria")
-
-    opcion = pedir_opcion("Opcion: ", 1, 4)
-
-    if opcion == 1:
-        return "Guardia"
-    elif opcion == 2:
-        return "Clinica medica"
-    elif opcion == 3:
-        return "UTI"
-    else:
-        return "Pediatria"
