@@ -1,4 +1,5 @@
 import re
+import archivos_json as json_archivos
 
 
 # ------------------ NORMALIZACION ------------------
@@ -28,6 +29,13 @@ horarios = ["08:00", "09:00", "10:00", "11:00", "12:00"]
 
 camas = ["Libre", "Libre", "Libre", "Libre", "Libre"]
 numeros_camas = [1, 2, 3, 4, 5]
+
+def reemplazar_lista(lista_original, lista_nueva):
+    #Reemplaza el contenido de una lista sin cambiar la variable original
+    lista_original.clear()
+
+    for dato in lista_nueva:
+        lista_original.append(dato)
 
 
 # ------------------ VALIDACIONES ------------------
@@ -861,7 +869,52 @@ def menu_pacientes():
         elif opcion == 0:
             print("Volviendo al menu principal...")
 
+def guardar_datos():
+    #Guarda los datos principales del sistema en JSON
+    if json_archivos.guardar_sistema_json(
+        "sistema_hospital.json",
+        dnis,
+        nombres,
+        edades,
+        diagnosticos,
+        estados,
+        alergias,
+        observaciones,
+        evoluciones,
+        turnos,
+        horarios,
+        camas,
+        numeros_camas
+    ):
+        print("Datos guardados correctamente.")
+    else:
+        print("No se pudieron guardar los datos.")
 
+
+def cargar_datos():
+    #Carga los datos principales del sistema desde JSON
+    datos = json_archivos.cargar_sistema_json("sistema_hospital.json")
+
+    if datos == None:
+        print("No se pudieron cargar los datos.")
+    else:
+        datos_pacientes = datos[0]
+
+        reemplazar_lista(dnis, datos_pacientes[0])
+        reemplazar_lista(nombres, datos_pacientes[1])
+        reemplazar_lista(edades, datos_pacientes[2])
+        reemplazar_lista(diagnosticos, datos_pacientes[3])
+        reemplazar_lista(estados, datos_pacientes[4])
+        reemplazar_lista(alergias, datos_pacientes[5])
+        reemplazar_lista(observaciones, datos_pacientes[6])
+        reemplazar_lista(evoluciones, datos_pacientes[7])
+
+        reemplazar_lista(turnos, datos[1])
+        reemplazar_lista(horarios, datos[2])
+        reemplazar_lista(camas, datos[3])
+        reemplazar_lista(numeros_camas, datos[4])
+
+        print("Datos cargados correctamente.")
 # ------------------ MENU PRINCIPAL ------------------
 def main():
     #Controla el menu principal del sistema
@@ -874,9 +927,11 @@ def main():
         print("3 - Modificar turnos")
         print("4 - Cancelacion de turnos")
         print("5 - Gestion de pacientes")
+        print("6 - Guardar datos")
+        print("7 - Cargar datos")
         print("0 - Salir")
 
-        opcion = pedir_opcion("Opcion: ", 0, 5)
+        opcion = pedir_opcion("Opcion: ", 0, 7)
 
         if opcion == 1:
             mostrar_turnos()
@@ -893,9 +948,15 @@ def main():
         elif opcion == 5:
             menu_pacientes()
 
-        elif opcion == 0:
-            print("Saliendo del sistema...")
+        elif opcion == 6:
+            guardar_datos()
 
+        elif opcion == 7:
+            cargar_datos()
+
+        elif opcion == 0:
+            guardar_datos()
+            print("Saliendo del sistema...")
 
 if __name__ == "__main__":
     main()
