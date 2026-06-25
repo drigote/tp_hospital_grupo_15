@@ -216,13 +216,12 @@ def pedir_opcion(mensaje, minimo, maximo):
 
 def validar_estado_paciente(estado):
     #Valida que el estado del paciente este dentro de los permitidos
-    estado = estado.strip().title()
+    estado = estado.strip().lower()
 
-    if estado in ESTADOS_PACIENTE_VALIDOS:
+    if estado == "ambulatorio" or estado == "internado" or estado == "alta medica":
         return True
     else:
         return False
-
 
 def pedir_estado_inicial():
     #Permite elegir el estado inicial del paciente
