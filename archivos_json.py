@@ -125,6 +125,9 @@ def cargar_sistema_json(nombre_archivo):
       
         dict_camas = sistema["camas_hospital"]
         numeros_camas = list(map(int, dict_camas.keys()))
+        camas = list(dict_camas.values())
+
+        return (*datos_pacientes, turnos_disponibles, turnos, camas, numeros_camas)
     except Exception as e:
         print(f"Error al cargar el sistema desde el archivo JSON: {e}")
         return None
